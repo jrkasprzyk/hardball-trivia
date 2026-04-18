@@ -7,7 +7,6 @@
 <style>
   /* ============================================================
      HARDBALL - 2008 Luna/Aero-inspired stylesheet
-     Fonts: Tahoma + Segoe UI. Gradients, bevels, drop shadows.
      ============================================================ */
 
   :root {
@@ -44,14 +43,13 @@
   }
 
   body {
-    /* A classic grassy XP-like desktop... but dimmer, more "boardroom" */
     background:
       radial-gradient(ellipse at top, #6aa4e8 0%, #2c5fa0 60%, #14335f 100%);
     color: #1a1a1a;
   }
 
   /* ============================================================
-     WINDOW CHROME - the fake "application" frame
+     WINDOW CHROME
      ============================================================ */
   #window {
     position: absolute;
@@ -132,7 +130,7 @@
     color: #222;
     flex-shrink: 0;
   }
-  #menubar span { margin-right: 14px; }
+  #menubar span { margin-right: 14px; cursor: default; }
   #menubar span u { text-decoration: underline; }
 
   #stage {
@@ -268,27 +266,13 @@
   .gp-btn.a { background: #4caf50; }
   .gp-btn.b { background: #e53935; }
   .gp-label, .gp-legend-text { margin-right: 12px; font-size: 12px; color: #333; margin-left: 6px; }
-  #gp-legend {
-    position: absolute;
-    right: 12px;
-    top: 12px;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    background: rgba(255,255,255,0.92);
-    padding: 6px 8px;
-    border-radius: 6px;
-    border: 1px solid #d0d0d0;
-    font-size: 12px;
-    z-index: 5;
-  }
   .luna-btn.focused {
     box-shadow: 0 0 0 3px rgba(255,255,255,0.12), 0 0 0 2px rgba(255,215,0,0.15) inset;
     transform: translateY(-1px);
   }
 
   /* ============================================================
-     LUNA BUTTON - that glossy pill button
+     LUNA BUTTON
      ============================================================ */
   .luna-btn {
     display: inline-block;
@@ -467,7 +451,7 @@
   }
 
   /* ============================================================
-     MAIN PLAY AREA - question card + deal area
+     MAIN PLAY AREA
      ============================================================ */
   #play-area {
     flex: 1;
@@ -521,6 +505,7 @@
     box-shadow: 0 0 0 1px rgba(255,255,255,0.7) inset;
     transition: all 0.15s;
     position: relative;
+    cursor: pointer;
   }
 
   .choice .letter {
@@ -537,7 +522,6 @@
     box-shadow: 0 0 0 1px rgba(255,255,255,0.7) inset;
   }
 
-  /* Position helpers for controller layout */
   .choice.pos-y { grid-area: y; width: 70%; }
   .choice.pos-x { grid-area: x; width: 95%; }
   .choice.pos-b { grid-area: b; width: 95%; }
@@ -545,7 +529,6 @@
 
   .choice .text { flex: 1; }
 
-  /* Player press indicators */
   .choice .press-indicators {
     display: flex;
     gap: 4px;
@@ -577,19 +560,6 @@
     50% { transform: scale(1.03); }
   }
 
-  /* Three-strikes LOCKED overlay */
-  .choice.locked-p1::after,
-  .choice.locked-p2::after {
-    content: "LOCKED";
-    position: absolute;
-    right: 6px; top: 50%;
-    transform: translateY(-50%);
-    font-size: 10px;
-    padding: 2px 4px;
-    border-radius: 2px;
-    color: white;
-  }
-
   #timer-bar {
     height: 10px;
     margin-top: 10px;
@@ -610,7 +580,7 @@
   }
 
   /* ============================================================
-     DEAL PHASE - the hands and briefcase
+     DEAL PHASE
      ============================================================ */
   #deal-area {
     position: relative;
@@ -694,7 +664,7 @@
   }
 
   /* ============================================================
-     MODAL - round type announcement, game over
+     MODAL
      ============================================================ */
   #modal-backdrop {
     position: absolute;
@@ -756,7 +726,6 @@
 
 <div id="window">
 
-  <!-- Fake window titlebar -->
   <div id="titlebar">
     <div class="icon">$</div>
     <div class="title-text">Hardball - The Trivia Negotiation</div>
@@ -767,20 +736,16 @@
     </div>
   </div>
 
-  <!-- Fake menubar -->
   <div id="menubar">
     <span><u>F</u>ile</span>
     <span><u>G</u>ame</span>
     <span><u>V</u>iew</span>
-    <span><u>H</u>elp</span>
+    <span id="menubar-help"><u>H</u>elp</span>
   </div>
 
-  <!-- Stage -->
   <div id="stage">
 
-    <!-- ============================================================
-         TITLE SCENE
-         ============================================================ -->
+    <!-- TITLE SCENE -->
     <div class="scene active" id="scene-title">
       <h1>HARDBALL</h1>
       <h2>&mdash; The Trivia Negotiation &mdash;</h2>
@@ -821,18 +786,20 @@
         <button class="luna-btn" id="btn-rounds-3">3 Rounds</button>
         <button class="luna-btn" id="btn-rounds-5">5 Rounds</button>
         <button class="luna-btn" id="btn-rounds-7">7 Rounds</button>
+        <button class="luna-btn" id="btn-help">Help</button>
+      </div>
+      <div style="margin-top:8px;">
+        <button class="luna-btn" id="join-p1">P1: CPU (Press Y to join)</button>
+        <button class="luna-btn" id="join-p2">P2: CPU (Press Y to join)</button>
       </div>
       <p style="color:white; font-size:11px; margin-top:12px; text-shadow:1px 1px 2px #000;">
         <span id="round-count-label">Playing best of 5 rounds</span>
       </p>
     </div>
 
-    <!-- ============================================================
-         GAME SCENE
-         ============================================================ -->
+    <!-- GAME SCENE -->
     <div class="scene" id="scene-game">
 
-      <!-- HUD -->
       <div id="hud">
         <div class="player-panel p1" id="panel-p1">
           <div class="name">
@@ -885,7 +852,6 @@
         </div>
       </div>
 
-      <!-- Play area -->
       <div id="play-area">
         <div id="question-card">
           <p id="question-prompt">Loading...</p>
@@ -894,28 +860,21 @@
         </div>
 
         <div id="deal-area">
-          <!-- The hands are rendered as SVG -->
           <svg class="hand" id="hand-p1" viewBox="0 0 120 120">
-            <!-- Sleeve -->
             <path d="M 0,70 L 30,60 L 35,100 L 5,110 Z"
                   fill="#c4202a" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
-            <!-- Cuff -->
             <path d="M 28,58 L 40,55 L 45,95 L 33,100 Z"
                   fill="white" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
-            <!-- Palm -->
             <ellipse cx="70" cy="70" rx="32" ry="22"
                      fill="#f5c89a" stroke="#000" stroke-width="3"/>
-            <!-- Thumb -->
             <path d="M 90,55 Q 105,50 108,62 Q 108,70 100,72 L 90,70 Z"
                   fill="#f5c89a" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
-            <!-- Fingers (extended for handshake) -->
             <path d="M 95,65 L 115,60 Q 118,66 115,70 L 95,73 Z"
                   fill="#f5c89a" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
             <path d="M 95,72 L 117,70 Q 119,75 115,78 L 95,80 Z"
                   fill="#f5c89a" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
             <path d="M 95,80 L 114,80 Q 116,84 112,86 L 95,87 Z"
                   fill="#f5c89a" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
-            <!-- Knuckle highlights -->
             <circle cx="100" cy="68" r="1.5" fill="#000"/>
             <circle cx="102" cy="75" r="1.5" fill="#000"/>
           </svg>
@@ -939,20 +898,15 @@
             <circle cx="102" cy="75" r="1.5" fill="#000"/>
           </svg>
 
-          <!-- Briefcase as SVG -->
           <svg id="briefcase" viewBox="0 0 90 60">
-            <!-- Case body -->
             <rect x="5" y="15" width="80" height="40" rx="3"
                   fill="#8b5a2b" stroke="#000" stroke-width="2"/>
             <rect x="5" y="15" width="80" height="8"
                   fill="#a07040" stroke="#000" stroke-width="2"/>
-            <!-- Handle -->
             <path d="M 35,15 Q 35,2 45,2 Q 55,2 55,15"
                   fill="none" stroke="#000" stroke-width="3"/>
-            <!-- Latches -->
             <rect x="20" y="17" width="8" height="5" fill="#d4a810" stroke="#000" stroke-width="1"/>
             <rect x="62" y="17" width="8" height="5" fill="#d4a810" stroke="#000" stroke-width="1"/>
-            <!-- $ emblem -->
             <circle cx="45" cy="38" r="8" fill="#d4a810" stroke="#000" stroke-width="2"/>
             <text x="45" y="43" font-family="Impact" font-size="14" fill="#3a2500" text-anchor="middle">$</text>
           </svg>
@@ -978,903 +932,13 @@
 
   </div>
 
-  <!-- Fake statusbar -->
   <div id="statusbar">
     <div class="segment" id="status-left">Ready.</div>
     <div class="segment" id="status-right" style="margin-left:auto;">HARDBALL v1.0</div>
   </div>
 </div>
 
-<script>
-  // ============================================================
-  // HARDBALL - game logic
-  // ============================================================
-
-  // ---- Question bank (matches promptukit `sections` schema) ----
-  // Embedded so the game works from file:// with no CORS headaches.
-  // You can later swap this out for `fetch("questions.json")` and
-  // point it at anything generated by `promptukit question-bank`.
-  const EMBEDDED_QUESTION_BANK = {
-    "title": "Hardball Default Bank",
-    "sections": [
-      {
-        "title": "General Knowledge",
-        "questions": [
-          {"prompt": "Which planet has the most moons?", "choices": ["Jupiter", "Saturn", "Uranus", "Neptune"], "answer": 1, "difficulty": "medium"},
-          {"prompt": "What is the capital of Australia?", "choices": ["Sydney", "Melbourne", "Canberra", "Perth"], "answer": 2, "difficulty": "easy"},
-          {"prompt": "How many bones are in the adult human body?", "choices": ["186", "206", "226", "246"], "answer": 1, "difficulty": "medium"},
-          {"prompt": "What is the largest ocean on Earth?", "choices": ["Atlantic", "Indian", "Arctic", "Pacific"], "answer": 3, "difficulty": "easy"},
-          {"prompt": "Which element has the chemical symbol 'Au'?", "choices": ["Silver", "Gold", "Aluminum", "Argon"], "answer": 1, "difficulty": "easy"}
-        ]
-      },
-      {
-        "title": "Science & Engineering",
-        "questions": [
-          {"prompt": "What does a Pareto frontier represent?", "choices": ["The worst solutions", "Solutions where no objective can improve without worsening another", "The average of all solutions", "Solutions that satisfy all constraints"], "answer": 1, "difficulty": "hard"},
-          {"prompt": "The unit of electrical resistance is the...", "choices": ["Volt", "Watt", "Ohm", "Ampere"], "answer": 2, "difficulty": "easy"},
-          {"prompt": "Approximately what percent of Earth's freshwater is in glaciers and ice caps?", "choices": ["10%", "30%", "50%", "68%"], "answer": 3, "difficulty": "hard"},
-          {"prompt": "What does 'riparian' refer to?", "choices": ["Desert ecosystems", "Areas along rivers and streams", "Deep ocean zones", "Mountain peaks"], "answer": 1, "difficulty": "medium"},
-          {"prompt": "Speed of light in a vacuum (m/s) is closest to...", "choices": ["3 × 10⁸", "3 × 10⁶", "3 × 10¹⁰", "3 × 10⁴"], "answer": 0, "difficulty": "medium"}
-        ]
-      },
-      {
-        "title": "Film, TV & Music",
-        "questions": [
-          {"prompt": "Who directed 'Spirited Away' and 'Ponyo'?", "choices": ["Isao Takahata", "Mamoru Hosoda", "Hayao Miyazaki", "Makoto Shinkai"], "answer": 2, "difficulty": "easy"},
-          {"prompt": "Bob Dylan's birth name is...", "choices": ["Robert Allen Zimmerman", "Robert James Dylan", "Robert Thomas Allen", "Robert Alan Wilson"], "answer": 0, "difficulty": "medium"},
-          {"prompt": "Which album contains 'Born to Run'?", "choices": ["Nebraska", "Born to Run", "The River", "Darkness on the Edge of Town"], "answer": 1, "difficulty": "easy"},
-          {"prompt": "Bad Bunny's summer 2022 album was titled...", "choices": ["YHLQMDLG", "Un Verano Sin Ti", "El Último Tour del Mundo", "X 100pre"], "answer": 1, "difficulty": "medium"},
-          {"prompt": "Which band did Bob Mould co-found in the 1980s?", "choices": ["Sugar", "Hüsker Dü", "The Replacements", "Dinosaur Jr."], "answer": 1, "difficulty": "hard"}
-        ]
-      },
-      {
-        "title": "Motorsport",
-        "questions": [
-          {"prompt": "How many laps is the Indianapolis 500?", "choices": ["100", "150", "200", "250"], "answer": 2, "difficulty": "easy"},
-          {"prompt": "Modern F1 cars use which engine formula?", "choices": ["1.6L V6 hybrid turbo", "3.0L V10", "2.4L V8", "1.5L I4 turbo"], "answer": 0, "difficulty": "medium"},
-          {"prompt": "IndyCar's crown-jewel oval race is held at...", "choices": ["Texas Motor Speedway", "Indianapolis Motor Speedway", "Iowa Speedway", "Gateway"], "answer": 1, "difficulty": "easy"},
-          {"prompt": "DRS in Formula 1 stands for...", "choices": ["Dynamic Racing System", "Drag Reduction System", "Downforce Recovery System", "Direct Response Steering"], "answer": 1, "difficulty": "medium"}
-        ]
-      }
-    ]
-  };
-
-  // Try to load a remote question bank (fallback to embedded).
-  const REMOTE_BANK_URL = "http://127.0.0.1:8000/trivia";
-  (async function tryLoadRemoteBank() {
-    try {
-      if (els.status) els.status.textContent = `Loading question bank from ${REMOTE_BANK_URL}...`;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      const res = await fetch(REMOTE_BANK_URL, { signal: controller.signal, cache: "no-store" });
-      clearTimeout(timeoutId);
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const data = await res.json();
-      if (data && typeof data === 'object') {
-        QUESTION_BANK = data;
-        POOL = flattenBank(QUESTION_BANK);
-        if (els.status) els.status.textContent = `Using remote question bank (${QUESTION_BANK.title || 'remote'})`;
-        console.log("Loaded question bank from remote:", REMOTE_BANK_URL);
-      } else {
-        throw new Error("Invalid JSON from remote bank");
-      }
-    } catch (err) {
-      console.warn("Remote question bank not available:", err);
-      if (els.status) els.status.textContent = "Using embedded question bank";
-    }
-  })();
-  // Start with the embedded bank; we'll attempt to load a remote bank below.
-  let QUESTION_BANK = EMBEDDED_QUESTION_BANK;
-
-  // ---- Normalize: flatten to a single question pool, promptukit-style tolerant ----
-  function flattenBank(bank) {
-    const pool = [];
-    const sections = bank.sections || bank.categories || [];
-    if (sections.length) {
-      for (const sec of sections) {
-        const title = sec.title || sec.name || sec.label || "Questions";
-        for (const q of (sec.questions || [])) {
-          pool.push(normalizeQuestion(q, title));
-        }
-      }
-    } else if (Array.isArray(bank.questions)) {
-      for (const q of bank.questions) {
-        pool.push(normalizeQuestion(q, q.category || "Questions"));
-      }
-    } else if (Array.isArray(bank)) {
-      for (const q of bank) pool.push(normalizeQuestion(q, q.category || "Questions"));
-    }
-    return pool;
-  }
-
-  function normalizeQuestion(q, category) {
-    return {
-      prompt: q.prompt || q.q || q.question || q.text || "???",
-      choices: q.choices || q.answers || [],
-      answer: q.answer ?? q.correct ?? q.correct_index ?? 0,
-      difficulty: q.difficulty || "medium",
-      category
-    };
-  }
-
-  let POOL = flattenBank(QUESTION_BANK);
-
-  // ---- Game state ----
-  const ROUND_TYPES = ["buzz", "simul", "strikes"];
-  const ROUND_LABELS = { buzz: "BUZZ-IN", simul: "SIMULTANEOUS", strikes: "THREE STRIKES" };
-
-  const state = {
-    totalRounds: 5,
-    round: 0,
-    roundType: "buzz",
-    question: null,
-    players: [
-      { id: 1, cash: 0, leverage: 0, strikes: 0, lockedOut: false, pickedChoice: null, answeredCorrect: false, strikesThisRound: 0 },
-      { id: 2, cash: 0, leverage: 0, strikes: 0, lockedOut: false, pickedChoice: null, answeredCorrect: false, strikesThisRound: 0 }
-    ],
-    phase: "idle",     // idle | question | deal | between
-    usedQuestions: new Set(),
-    roundStart: 0,
-    timerTotalMs: 12000,
-    timerTimeout: null,
-    firstCorrectPlayer: null
-  };
-
-  // ---- DOM refs ----
-  const $ = (id) => document.getElementById(id);
-  const els = {
-    title: $("scene-title"),
-    game: $("scene-game"),
-    prompt: $("question-prompt"),
-    choices: $("choices"),
-    roundNum: $("round-num"),
-    roundTotal: $("round-total"),
-    roundType: $("round-type"),
-    sectionTitle: $("section-title"),
-    timerFill: $("timer-fill"),
-    modal: $("modal-backdrop"),
-    modalTitle: $("modal-title"),
-    modalSub: $("modal-subtitle"),
-    modalDetail: $("modal-detail"),
-    modalActions: $("modal-actions"),
-    handP1: $("hand-p1"),
-    handP2: $("hand-p2"),
-    briefcase: $("briefcase"),
-    dealBanner: $("deal-banner"),
-    dealBannerText: $("deal-banner-text"),
-    dealArea: $("deal-area"),
-    status: $("status-left"),
-    panelP1: $("panel-p1"),
-    panelP2: $("panel-p2")
-  };
-
-  // ============================================================
-  // SETUP
-  // ============================================================
-  $("btn-start").addEventListener("click", startGame);
-  $("btn-rounds-3").addEventListener("click", () => setRounds(3));
-  $("btn-rounds-5").addEventListener("click", () => setRounds(5));
-  $("btn-rounds-7").addEventListener("click", () => setRounds(7));
-
-  function setRounds(n) {
-    state.totalRounds = n;
-    $("round-count-label").textContent = `Playing best of ${n} rounds`;
-  }
-
-  function startGame() {
-    state.round = 0;
-    state.usedQuestions.clear();
-    for (const p of state.players) {
-      p.cash = 0; p.leverage = 0; p.strikes = 0; p.lockedOut = false;
-    }
-    updateHUD();
-    showScene("game");
-    nextRound();
-  }
-
-  function showScene(name) {
-    document.querySelectorAll(".scene").forEach(s => s.classList.remove("active"));
-    $("scene-" + name).classList.add("active");
-    if (name === "title") {
-      titleFocus = titleFocus || 0;
-      updateTitleFocus();
-    } else {
-      document.querySelectorAll('.luna-btn.focused').forEach(b => b.classList.remove('focused'));
-    }
-  }
-
-  // ============================================================
-  // ROUND FLOW
-  // ============================================================
-  function nextRound() {
-    if (state.round >= state.totalRounds) {
-      return endGame();
-    }
-    state.round++;
-    state.roundType = ROUND_TYPES[(state.round - 1) % ROUND_TYPES.length];
-    // Pick a question not yet used
-    let q = randomQuestion();
-    state.question = q;
-    // Reset per-round player state
-    for (const p of state.players) {
-      p.leverage = 0;
-      p.pickedChoice = null;
-      p.answeredCorrect = false;
-      p.lockedOut = false;
-      p.strikesThisRound = 0;
-    }
-    state.firstCorrectPlayer = null;
-
-    // Update UI labels
-    els.roundNum.textContent = state.round;
-    els.roundTotal.textContent = state.totalRounds;
-    els.roundType.textContent = ROUND_LABELS[state.roundType];
-    els.sectionTitle.textContent = q.category;
-    updateHUD();
-    resetDealScene();
-
-    showModal({
-      title: "ROUND " + state.round,
-      subtitle: ROUND_LABELS[state.roundType],
-      detail: roundTypeBlurb(state.roundType),
-      actions: [{ label: "▶ Begin", primary: true, onclick: () => { hideModal(); beginQuestion(); } }]
-    });
-  }
-
-  function roundTypeBlurb(t) {
-    if (t === "buzz") return "First correct answer wins ALL the leverage. Wrong answer = lockout.";
-    if (t === "simul") return "Lock in your answer secretly. Both reveal together. Correct answers split leverage.";
-    if (t === "strikes") return "Wrong answers add a strike; 3 strikes locks you out. A correct answer REVERSES one of your opponent's strikes.";
-    return "";
-  }
-
-  function randomQuestion() {
-    const available = POOL.map((_, i) => i).filter(i => !state.usedQuestions.has(i));
-    const pickFrom = available.length ? available : POOL.map((_, i) => i); // wrap around if we run out
-    if (!available.length) state.usedQuestions.clear();
-    const idx = pickFrom[Math.floor(Math.random() * pickFrom.length)];
-    state.usedQuestions.add(idx);
-    return POOL[idx];
-  }
-
-  function beginQuestion() {
-    state.phase = "question";
-    renderChoices();
-    els.prompt.textContent = state.question.prompt;
-    startTimer(state.timerTotalMs);
-    els.status.textContent = "Phase: answering...";
-  }
-
-  function renderChoices() {
-    els.choices.innerHTML = "";
-    // Display letters that match Xbox face layout: Y (top), X (left), B (right), A (bottom)
-    const displayLetters = ["Y", "X", "B", "A"];
-    const posClass = ["pos-y", "pos-x", "pos-b", "pos-a"];
-    state.question.choices.forEach((ch, i) => {
-      const div = document.createElement("div");
-      div.className = "choice";
-      div.classList.add(posClass[i] || "");
-      div.dataset.index = i;
-      div.setAttribute('role', 'button');
-      div.setAttribute('aria-label', `${displayLetters[i] || ''}: ${ch}`);
-      div.innerHTML = `
-        <div class="letter">${displayLetters[i] || ''}</div>
-        <div class="text">${escapeHTML(ch)}</div>
-        <div class="press-indicators">
-          <div class="press-dot p1" data-player="1"></div>
-          <div class="press-dot p2" data-player="2"></div>
-        </div>
-      `;
-      // Allow mouse/touch selection still
-      div.addEventListener('click', () => handlePlayerInput(1, i));
-      els.choices.appendChild(div);
-    });
-  }
-
-  function escapeHTML(s) {
-    const d = document.createElement("div");
-    d.textContent = s;
-    return d.innerHTML;
-  }
-
-  // ============================================================
-  // TIMER
-  // ============================================================
-  function startTimer(ms) {
-    state.roundStart = performance.now();
-    els.timerFill.style.transition = "none";
-    els.timerFill.style.width = "100%";
-    els.timerFill.classList.remove("warning");
-    // Force reflow
-    void els.timerFill.offsetWidth;
-    els.timerFill.style.transition = `width ${ms}ms linear`;
-    els.timerFill.style.width = "0%";
-
-    clearTimeout(state.timerTimeout);
-    state.timerTimeout = setTimeout(() => onTimeUp(), ms);
-
-    // Warning flash at 25%
-    setTimeout(() => els.timerFill.classList.add("warning"), ms * 0.75);
-  }
-
-  function stopTimer() {
-    clearTimeout(state.timerTimeout);
-    // Freeze the bar where it is by computing the current width
-    const rect = els.timerFill.getBoundingClientRect();
-    const parentRect = els.timerFill.parentElement.getBoundingClientRect();
-    const currentPct = (rect.width / parentRect.width) * 100;
-    els.timerFill.style.transition = "none";
-    els.timerFill.style.width = currentPct + "%";
-  }
-
-  function onTimeUp() {
-    if (state.phase !== "question") return;
-    // Resolve based on round type
-    resolveQuestion();
-  }
-
-  // ============================================================
-  // INPUT (keyboard + gamepad)
-  // ============================================================
-  // P1: 1/2/3/4 -> indices 0-3
-  // P2: 7/8/9/0 -> indices 0-3
-  const KEY_MAP = {
-    "1": { player: 1, idx: 0 }, "2": { player: 1, idx: 1 },
-    "3": { player: 1, idx: 2 }, "4": { player: 1, idx: 3 },
-    "7": { player: 2, idx: 0 }, "8": { player: 2, idx: 1 },
-    "9": { player: 2, idx: 2 }, "0": { player: 2, idx: 3 }
-  };
-
-  document.addEventListener("keydown", (e) => {
-    if (e.repeat) return;
-    const m = KEY_MAP[e.key];
-    if (m && state.phase === "question") {
-      handlePlayerInput(m.player, m.idx);
-    }
-    if (e.key === "Escape" && state.phase !== "idle") {
-      // Quick reset shortcut
-      showScene("title");
-      state.phase = "idle";
-    }
-  });
-
-  // Gamepad handling with explicit Xbox layout mapping and title navigation
-  // Xbox gamepad standard mapping: 0=A, 1=B, 2=X, 3=Y
-  // We remap so that controller face buttons map to choice positions:
-  // button 3 (Y) -> choice 0 (top), 2 (X) -> choice 1 (left), 1 (B) -> choice 2 (right), 0 (A) -> choice 3 (bottom)
-  const GAMEPAD_BUTTON_TO_CHOICE = [3, 2, 1, 0]; // gamepad button idx -> choice idx
-  const gamepadPrev = {};
-
-  // Title screen navigation elements
-  const TITLE_NAV_ELEMENTS = [ $("btn-start"), $("btn-rounds-3"), $("btn-rounds-5"), $("btn-rounds-7") ];
-  let titleFocus = 0;
-  function updateTitleFocus() {
-    TITLE_NAV_ELEMENTS.forEach((el, i) => {
-      if (!el) return;
-      el.classList.toggle('focused', i === titleFocus);
-    });
-  }
-  function handleTitleGamepadInput(player, buttonIndex) {
-    // D-pad: 14=left, 15=right; A (0) = confirm
-    if (buttonIndex === 14) {
-      titleFocus = (titleFocus - 1 + TITLE_NAV_ELEMENTS.length) % TITLE_NAV_ELEMENTS.length;
-      updateTitleFocus();
-    } else if (buttonIndex === 15) {
-      titleFocus = (titleFocus + 1) % TITLE_NAV_ELEMENTS.length;
-      updateTitleFocus();
-    } else if (buttonIndex === 0) {
-      const el = TITLE_NAV_ELEMENTS[titleFocus];
-      if (el) el.click();
-    }
-  }
-
-  // Modal focus for controller confirmation
-  let modalFocus = 0;
-  function updateModalFocus() {
-    if (!els.modalActions) return;
-    const btns = els.modalActions.querySelectorAll('button');
-    btns.forEach((b, i) => b.classList.toggle('focused', i === modalFocus));
-  }
-
-  function pollGamepads() {
-    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-    for (let p = 0; p < Math.min(2, pads.length); p++) {
-      const pad = pads[p];
-      if (!pad) continue;
-      const player = p + 1;
-      const prev = gamepadPrev[player] || (gamepadPrev[player] = []);
-
-      // Face buttons 0..3 (A,B,X,Y)
-      for (const b of [0,1,2,3]) {
-        const pressed = pad.buttons[b] && pad.buttons[b].pressed;
-        if (pressed && !prev[b]) {
-          // Modal gets priority when active
-          if (els.modal && els.modal.classList.contains('active')) {
-            // A (0) confirms currently focused modal action
-            if (b === 0) {
-              const btns = els.modalActions.querySelectorAll('button');
-              const btn = btns[modalFocus] || btns[0];
-              if (btn) btn.click();
-            }
-          } else if (document.querySelector("#scene-title").classList.contains("active")) {
-            handleTitleGamepadInput(player, b);
-          } else if (state.phase === "question") {
-            const choiceIdx = GAMEPAD_BUTTON_TO_CHOICE[b];
-            handlePlayerInput(player, choiceIdx);
-          }
-        }
-        prev[b] = !!pressed;
-      }
-
-      // D-pad (12=up,13=down,14=left,15=right) for title/modal navigation
-      for (const b of [12,13,14,15]) {
-        const pressed = pad.buttons[b] && pad.buttons[b].pressed;
-        if (pressed && !prev[b]) {
-          if (els.modal && els.modal.classList.contains('active')) {
-            // left/right to change modal focus
-            const btns = els.modalActions ? els.modalActions.children : null;
-            if (btns && btns.length) {
-              if (b === 14) {
-                modalFocus = (modalFocus - 1 + btns.length) % btns.length;
-                updateModalFocus();
-              } else if (b === 15) {
-                modalFocus = (modalFocus + 1) % btns.length;
-                updateModalFocus();
-              }
-            }
-          } else if (document.querySelector("#scene-title").classList.contains("active")) {
-            handleTitleGamepadInput(player, b);
-          }
-        }
-        prev[b] = !!pressed;
-      }
-    }
-    requestAnimationFrame(pollGamepads);
-  }
-  // Initialize title focus if title is visible
-  if (document.querySelector("#scene-title").classList.contains("active")) updateTitleFocus();
-  requestAnimationFrame(pollGamepads);
-
-  function handlePlayerInput(playerNum, choiceIdx) {
-    if (choiceIdx >= state.question.choices.length) return;
-    const p = state.players[playerNum - 1];
-    if (p.lockedOut) return;
-
-    // Round-type-specific input handling
-    if (state.roundType === "buzz") {
-      // first correct answer takes it all; wrong answer locks you out
-      if (p.pickedChoice !== null) return; // one shot
-      p.pickedChoice = choiceIdx;
-      markPress(playerNum, choiceIdx);
-      const correct = choiceIdx === state.question.answer;
-      if (correct) {
-        state.firstCorrectPlayer = playerNum;
-        p.answeredCorrect = true;
-        // Buzz-in immediately resolves
-        stopTimer();
-        setTimeout(() => resolveQuestion(), 300);
-      } else {
-        // Wrong buzz = lockout for this question
-        p.lockedOut = true;
-        flashChoice(choiceIdx, "incorrect");
-        // Other player still has a chance
-        checkBothLockedOrAnswered();
-      }
-    } else if (state.roundType === "simul") {
-      // Can change pick until time runs out; keep picks secret until reveal
-      p.pickedChoice = choiceIdx;
-      // Do NOT show press indicators here so picks remain hidden during simultaneous lock-in.
-      // If both players have locked in, speed up to reveal both at the same time.
-      if (state.players[0].pickedChoice !== null && state.players[1].pickedChoice !== null) {
-        stopTimer();
-        setTimeout(() => resolveQuestion(), 500);
-      }
-    } else if (state.roundType === "strikes") {
-      // Each wrong answer is a strike (this round). Right answer reverses opponent's strike (if any).
-      if (p.pickedChoice === choiceIdx) return; // avoid spam on same choice
-      p.pickedChoice = choiceIdx;
-      markPress(playerNum, choiceIdx);
-      const correct = choiceIdx === state.question.answer;
-      if (correct) {
-        p.answeredCorrect = true;
-        stopTimer();
-        setTimeout(() => resolveQuestion(), 400);
-      } else {
-        p.strikesThisRound++;
-        flashChoice(choiceIdx, "incorrect");
-        // Total strikes including this round
-        const totalStrikes = p.strikes + p.strikesThisRound;
-        if (totalStrikes >= 3) {
-          p.lockedOut = true;
-        }
-        updateHUD();
-        // Reset pick so they can try again (if not locked out)
-        setTimeout(() => { p.pickedChoice = null; clearPress(playerNum); }, 400);
-        checkBothLockedOrAnswered();
-      }
-    }
-  }
-
-  function checkBothLockedOrAnswered() {
-    const both = state.players.every(p => p.lockedOut || p.answeredCorrect);
-    if (both) {
-      stopTimer();
-      setTimeout(() => resolveQuestion(), 400);
-    }
-  }
-
-  function markPress(playerNum, idx) {
-    clearPress(playerNum);
-    const choice = els.choices.children[idx];
-    if (!choice) return;
-    const dot = choice.querySelector(`.press-dot.p${playerNum}`);
-    if (dot) dot.classList.add("shown");
-  }
-  function clearPress(playerNum) {
-    document.querySelectorAll(`.press-dot.p${playerNum}`).forEach(d => d.classList.remove("shown"));
-  }
-  function updateAllPressIndicators() {
-    clearPress(1); clearPress(2);
-    for (const p of state.players) {
-      if (p.pickedChoice !== null) markPress(p.id, p.pickedChoice);
-    }
-  }
-  function flashChoice(idx, cls) {
-    const el = els.choices.children[idx];
-    if (!el) return;
-    el.classList.add(cls);
-    setTimeout(() => el.classList.remove(cls), 600);
-  }
-
-  // ============================================================
-  // RESOLUTION
-  // ============================================================
-  function resolveQuestion() {
-    if (state.phase !== "question") return;
-    state.phase = "deal";
-    stopTimer();
-
-    const correct = state.question.answer;
-    // Show the correct answer
-    for (let i = 0; i < els.choices.children.length; i++) {
-      els.choices.children[i].classList.remove("incorrect");
-    }
-    els.choices.children[correct].classList.add("correct");
-
-    // Reveal any secret picks (simultaneous rounds) by showing press indicators now
-    if (state.roundType === "simul") {
-      updateAllPressIndicators();
-    }
-
-    // Compute leverage per round type
-    if (state.roundType === "buzz") {
-      if (state.firstCorrectPlayer) {
-        state.players[state.firstCorrectPlayer - 1].leverage = 100;
-      }
-      // Locked-out players get -20 leverage (bad position at the table)
-      for (const p of state.players) {
-        if (p.lockedOut && !p.answeredCorrect) p.leverage = -20;
-      }
-    } else if (state.roundType === "simul") {
-      for (const p of state.players) {
-        if (p.pickedChoice === correct) {
-          p.answeredCorrect = true;
-          p.leverage = 60;
-        } else if (p.pickedChoice === null) {
-          p.leverage = -30; // no answer is worse than wrong
-        } else {
-          p.leverage = -10;
-        }
-      }
-    } else if (state.roundType === "strikes") {
-      // Commit strikesThisRound to total
-      for (const p of state.players) {
-        p.strikes = Math.min(3, p.strikes + p.strikesThisRound);
-      }
-      // Correct-answer bonus + reversal of opponent's strike
-      for (let i = 0; i < 2; i++) {
-        const p = state.players[i];
-        const opp = state.players[1 - i];
-        if (p.answeredCorrect) {
-          p.leverage = 80;
-          // Reverse one opponent strike
-          if (opp.strikes > 0) opp.strikes--;
-        } else if (p.lockedOut) {
-          p.leverage = -30;
-        } else {
-          p.leverage = -10;
-        }
-      }
-    }
-
-    updateHUD();
-    els.status.textContent = "Phase: negotiating...";
-
-    setTimeout(() => runDealPhase(), 900);
-  }
-
-  // ============================================================
-  // DEAL PHASE - the hand-shove animation
-  // ============================================================
-  function resetDealScene() {
-    // Return hands to starting positions, no transform overrides
-    els.handP1.style.left = "2%";
-    els.handP1.style.transform = "";
-    els.handP2.style.right = "2%";
-    els.handP2.style.transform = "scaleX(-1)";
-    els.briefcase.style.transform = "translateX(-50%)";
-    els.dealBanner.classList.remove("shown");
-  }
-
-  function runDealPhase() {
-    // Compute who "wins the deal" based on leverage
-    const p1 = state.players[0];
-    const p2 = state.players[1];
-    const diff = p1.leverage - p2.leverage;   // positive = p1 wins
-    const winner = diff > 0 ? 1 : (diff < 0 ? 2 : 0);
-    const absLev = Math.abs(diff);
-
-    // Map leverage diff to a "push distance". The hand of the LOSER gets
-    // shoved past center; the winner's hand stays near center with a
-    // dominant posture.
-    // absLev ranges 0 to ~130. We'll normalize to 0..1 for push intensity.
-    const intensity = Math.min(1, absLev / 100);
-
-    // Payout: each 10 leverage points in the winner's favor = $50.
-    // Losing player actually loses $20 if they had negative leverage.
-    const payout = winner ? Math.max(20, Math.round(absLev * 5)) : 0;
-    const penalty = winner ? 0 : 0; // handled below for draws
-
-    // ---- Animate hands ----
-    // We'll position by left/right percentages.
-    if (winner === 1) {
-      // P1 moves in strongly; P2 gets pushed back to their own side then "reaches in" at a weaker angle
-      els.handP1.style.left = (35 + 5 * (1 - intensity)) + "%";  // toward center
-      els.handP2.style.right = (30 + 20 * intensity) + "%";       // pushed back to right side
-      els.handP2.style.transform = `scaleX(-1) rotate(${10 * intensity}deg)`;
-      els.briefcase.style.transform = `translateX(calc(-50% + ${15 * intensity}%))`; // briefcase slides toward P1
-    } else if (winner === 2) {
-      els.handP2.style.right = (35 + 5 * (1 - intensity)) + "%";
-      els.handP1.style.left = (30 + 20 * intensity) + "%";
-      els.handP1.style.transform = `rotate(${-10 * intensity}deg)`;
-      els.briefcase.style.transform = `translateX(calc(-50% - ${15 * intensity}%))`;
-    } else {
-      // Draw: both hands meet in the middle equally
-      els.handP1.style.left = "38%";
-      els.handP2.style.right = "38%";
-    }
-
-    // ---- Banner + cash ----
-    setTimeout(() => {
-      let bannerText, color;
-      if (winner === 1) {
-        bannerText = `PLAYER 1 TAKES THE DEAL: +$${payout}`;
-        color = "var(--p1-color)";
-        state.players[0].cash += payout;
-      } else if (winner === 2) {
-        bannerText = `PLAYER 2 TAKES THE DEAL: +$${payout}`;
-        color = "var(--p2-color)";
-        state.players[1].cash += payout;
-      } else {
-        bannerText = "STALEMATE — NO DEAL";
-        color = "#555";
-      }
-      // Apply small penalty if either player had negative leverage (they overextended)
-      for (const p of state.players) {
-        if (p.leverage < 0 && winner !== p.id) {
-          const loss = Math.min(p.cash, 15);
-          p.cash -= loss;
-        }
-      }
-
-      els.dealBannerText.textContent = bannerText;
-      els.dealBanner.style.background =
-        `linear-gradient(to bottom, ${color}, #000)`;
-      els.dealBanner.style.color = "white";
-      els.dealBanner.classList.add("shown");
-
-      // Fly money effect
-      if (winner) flyMoney(winner, payout);
-
-      updateHUD();
-    }, 900);
-
-    // ---- Move on ----
-    setTimeout(() => {
-      state.phase = "between";
-      els.dealBanner.classList.remove("shown");
-      setTimeout(() => nextRound(), 900);
-    }, 3200);
-  }
-
-  function flyMoney(winner, amount) {
-    // Emit N little money bills from briefcase to winner's panel
-    const bills = Math.min(8, Math.max(3, Math.round(amount / 30)));
-    const briefRect = els.briefcase.getBoundingClientRect();
-    const targetRect = (winner === 1 ? els.panelP1 : els.panelP2).getBoundingClientRect();
-    const areaRect = els.dealArea.getBoundingClientRect();
-
-    for (let i = 0; i < bills; i++) {
-      const bill = document.createElement("div");
-      bill.className = "money-fly";
-      bill.textContent = "$";
-      const startX = briefRect.left - areaRect.left + 20;
-      const startY = briefRect.top - areaRect.top + 10;
-      bill.style.left = startX + "px";
-      bill.style.top = startY + "px";
-      els.dealArea.appendChild(bill);
-
-      // Target roughly the center of the cash counter
-      const endX = (winner === 1 ? 30 : areaRect.width - 70) + (Math.random() - 0.5) * 30;
-      const endY = -40 + Math.random() * 20;
-
-      bill.animate([
-        { left: startX + "px", top: startY + "px", opacity: 1, transform: "scale(1)" },
-        { opacity: 1, offset: 0.7 },
-        { left: endX + "px", top: endY + "px", opacity: 0, transform: "scale(0.5)" }
-      ], {
-        duration: 900 + Math.random() * 300,
-        delay: i * 80,
-        easing: "cubic-bezier(0.4, 0.0, 0.6, 1)",
-        fill: "forwards"
-      });
-      setTimeout(() => bill.remove(), 1500 + i * 80);
-    }
-  }
-
-  // ============================================================
-  // HUD
-  // ============================================================
-  function updateHUD() {
-    $("cash-p1").textContent = state.players[0].cash;
-    $("cash-p2").textContent = state.players[1].cash;
-    $("leverage-p1").textContent = state.players[0].leverage;
-    $("leverage-p2").textContent = state.players[1].leverage;
-    renderStrikes(1);
-    renderStrikes(2);
-    // Highlight who's "active" (has the most leverage this round)
-    els.panelP1.classList.toggle("active", state.players[0].leverage > state.players[1].leverage && state.players[0].leverage > 0);
-    els.panelP2.classList.toggle("active", state.players[1].leverage > state.players[0].leverage && state.players[1].leverage > 0);
-  }
-
-  function renderStrikes(pNum) {
-    const wrap = $("strikes-p" + pNum);
-    const tot = state.players[pNum - 1].strikes + (state.players[pNum - 1].strikesThisRound || 0);
-    const kids = wrap.querySelectorAll(".strike-x");
-    kids.forEach((k, i) => {
-      k.classList.toggle("active", i < Math.min(3, tot));
-    });
-  }
-
-  // ============================================================
-  // MODAL
-  // ============================================================
-  function showModal({ title, subtitle, detail, actions }) {
-    els.modalTitle.textContent = title;
-    els.modalSub.textContent = subtitle || "";
-    els.modalDetail.textContent = detail || "";
-    els.modalActions.innerHTML = "";
-    for (const a of (actions || [])) {
-      const b = document.createElement("button");
-      b.className = "luna-btn" + (a.primary ? " primary" : "");
-      b.textContent = a.label;
-      b.addEventListener("click", a.onclick);
-      els.modalActions.appendChild(b);
-    }
-    // Set modal focus to the first action and show it
-    modalFocus = 0;
-    updateModalFocus();
-    els.modal.classList.add("active");
-  }
-  function hideModal() {
-    els.modal.classList.remove("active");
-    // clear focused state on buttons
-    if (els.modalActions) {
-      const btns = els.modalActions.querySelectorAll('button');
-      btns.forEach(b => b.classList.remove('focused'));
-    }
-  }
-
-  // ============================================================
-  // END OF GAME
-  // ============================================================
-  function endGame() {
-    state.phase = "idle";
-    const p1 = state.players[0].cash;
-    const p2 = state.players[1].cash;
-    const winner = p1 > p2 ? 1 : (p2 > p1 ? 2 : 0);
-    let title, sub;
-    if (winner === 0) {
-      title = "DRAW";
-      sub = `Both hustled their way to $${p1}.`;
-    } else {
-      title = `PLAYER ${winner} WINS`;
-      sub = `$${state.players[winner - 1].cash} vs $${state.players[1 - (winner - 1)].cash}`;
-    }
-    showModal({
-      title, subtitle: sub,
-      detail: "Rematch?",
-      actions: [
-        { label: "▶ Play Again", primary: true, onclick: () => { hideModal(); startGame(); } },
-        { label: "Main Menu", onclick: () => { hideModal(); showScene("title"); } }
-      ]
-    });
-  }
-
-  // Auto-test harness: if URL contains ?autoTest=simul this will simulate a simultaneous round
-  (function autoTestHarness() {
-    try {
-      const params = new URLSearchParams(location.search);
-      if (!params.has('autoTest')) return;
-      const test = params.get('autoTest');
-      console.log('AUTO TEST:', test);
-      const resultDiv = document.createElement('div');
-      resultDiv.style.position = 'fixed';
-      resultDiv.style.left = '8px';
-      resultDiv.style.bottom = '8px';
-      resultDiv.style.zIndex = 9999;
-      resultDiv.style.background = 'rgba(0,0,0,0.75)';
-      resultDiv.style.color = 'white';
-      resultDiv.style.padding = '8px 12px';
-      resultDiv.style.borderRadius = '6px';
-      resultDiv.style.fontWeight = 'bold';
-      resultDiv.textContent = 'AutoTest running...';
-      document.body.appendChild(resultDiv);
-
-      if (test === 'simul') {
-        // Force a single simultaneous round using the first question in the pool
-        state.totalRounds = 1;
-        state.round = 0;
-        state.question = POOL[0];
-        state.roundType = 'simul';
-        for (const p of state.players) {
-          p.pickedChoice = null; p.lockedOut = false; p.answeredCorrect = false; p.strikesThisRound = 0;
-        }
-        showScene('game');
-        // Start the question phase
-        beginQuestion();
-
-        // Simulate P1 then P2 picking different choices
-        setTimeout(() => {
-          handlePlayerInput(1, 0); // P1 picks choice 0
-          // Check press indicators remain hidden
-          const p1dot = document.querySelector('.press-dot.p1.shown');
-          const p2dot = document.querySelector('.press-dot.p2.shown');
-          const beforeHidden = !p1dot && !p2dot;
-          console.log('Before reveal, indicators shown?', !!p1dot, !!p2dot);
-          resultDiv.textContent = 'Before reveal hidden: ' + beforeHidden;
-
-          handlePlayerInput(2, 1); // P2 picks choice 1
-          const p1dot2 = document.querySelector('.press-dot.p1.shown');
-          const p2dot2 = document.querySelector('.press-dot.p2.shown');
-          const stillHidden = !p1dot2 && !p2dot2;
-          console.log('After both pick, indicators shown?', !!p1dot2, !!p2dot2);
-          resultDiv.textContent = 'Before reveal hidden: ' + (beforeHidden && stillHidden);
-        }, 200);
-
-        // After resolution, ensure indicators are revealed
-        setTimeout(() => {
-          // give resolution time to run (resolveQuestion schedules a reveal)
-          setTimeout(() => {
-            const p1Shown = !!document.querySelector('.press-dot.p1.shown');
-            const p2Shown = !!document.querySelector('.press-dot.p2.shown');
-            const pass = p1Shown && p2Shown;
-            console.log('After reveal, indicators shown?', p1Shown, p2Shown);
-            if (pass) {
-              resultDiv.style.background = 'green';
-              resultDiv.textContent = 'AUTO TEST PASS — simultaneous picks hidden until reveal';
-            } else {
-              resultDiv.style.background = '#800000';
-              resultDiv.textContent = 'AUTO TEST FAIL — picks visible prematurely';
-            }
-          }, 900);
-        }, 900);
-      }
-    } catch (err) {
-      console.error('AutoTest error', err);
-    }
-  })();
-</script>
-
+<script src="js/utils.js"></script>
+<script src="js/game.js"></script>
 </body>
 </html>

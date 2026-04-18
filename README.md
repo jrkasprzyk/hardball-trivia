@@ -1,107 +1,67 @@
-# Hardball — The Trivia Negotiation
+## Hardball — The Trivia Negotiation (v0.1.1)
 
-A two-player trivia battle with a *Theme Park*-inspired negotiation phase.
-Correct answers earn **leverage**. Leverage decides who walks away from the
-briefcase with the money — and whose cartoon hand gets shoved across the table.
+Small local demo of the trivia-negotiation prototype. Two players compete
+across a sequence of rounds; each round type uses a different answering
+mechanic and awards "leverage" which determines who wins the briefcase.
+
+Quick highlights in v0.1.1
+- Three-Strikes rounds now run as a multi-question sequence until a player
+  accumulates 3 strikes (locks out). Correct answers in strikes rounds
+  remove one opponent strike.
+- Clarified leverage and payout behavior in UI and README.
 
 ## Running the game
 
-No build step. Just open `index.html` in a browser.
+No build step. Open `index.html` in a modern browser.
 
-```
-# Optional: serve it so you can hot-swap questions.json without CORS pain
+Optional: serve the folder for easier testing and hot-swapping `questions.json`:
+
+```bash
 python -m http.server 8000
 # then visit http://localhost:8000
 ```
 
 ## Controls
 
-- **Player 1:** keys `1` `2` `3` `4` (A / B / C / D), or **Gamepad 1** face buttons
-- **Player 2:** keys `7` `8` `9` `0` (A / B / C / D), or **Gamepad 2** face buttons
-- **Escape:** bail to main menu
+- Player 1: keys `1 2 3 4` (A/B/C/D) or Gamepad 1 face buttons
+- Player 2: keys `7 8 9 0` (A/B/C/D) or Gamepad 2 face buttons
+- `Escape`: return to main menu
 
-## Round types
+## Round types (summary)
 
-| Type          | Behavior |
-|---------------|----------|
-| Buzz-In       | First correct answer grabs all the leverage. A wrong buzz locks you out. |
-| Simultaneous  | Both players secretly lock in a pick. Reveal together — correct = leverage. |
-| Three Strikes | Wrong answers stack strikes (3 = locked out). A correct answer *reverses* one of your opponent's strikes. |
+- Buzz-In — First correct answer wins the entire pot. Wrong buzz locks you out for that question.
+- Simultaneous — Players lock in answers secretly; both reveal together. Correct answers earn leverage.
+- Three Strikes — Wrong answers add strikes. The round continues with new questions until a player reaches 3 strikes and becomes locked out. Correct answers remove one opponent strike.
 
-Rounds cycle through the three types. Best-of-N cash total wins.
+Rounds cycle in order: Buzz-In → Simultaneous → Three Strikes.
 
-## Using your own `promptukit` question banks
+## Leverage & scoring
 
-The game reads the **exact JSON schema** that `promptukit` produces. Right now
-the bank is embedded in `index.html` inside the `QUESTION_BANK` constant. Two
-ways to swap it:
+- Leverage is a per-round numeric score awarded based on correctness and round type. The player with higher leverage "wins the deal" and receives cash.
+- Payout formula used in this demo: `payout = max(20, Math.round(|leverageDiff| * 5))`.
+- Negative leverage (for wrong answers or no-shows) can cause small cash losses.
 
-### Option A — paste a new bank in
+## Using your own question banks
 
-Generate a bank with your CLI:
+The game accepts banks in the promptukit-friendly schema. By default a small
+embedded bank is used (so `index.html` works over `file://`). To swap banks:
 
-```
-poetry run question-bank create --dest mybank.json --categories trivia,general
-poetry run add-question --batch new_questions.json mybank.json
-```
+- Paste a JSON bank into the `QUESTION_BANK` object in `index.html`.
+- Or serve a JSON file and modify the remote loading URL in `index.html`.
 
-Open `mybank.json`, copy the contents, and replace the `QUESTION_BANK` object
-literal in `index.html`.
+Expected fields: `prompt` (or `q`/`question`), `choices` (array), `answer` (zero-index), `difficulty` (optional), `category` (optional).
 
-### Option B — fetch it at runtime
+## Dev & testing tips
 
-Replace the `QUESTION_BANK` block in `index.html` with:
+- Auto-test harness: open `index.html?autoTest=simul` to run a quick simultaneous-round smoke test.
+- To iterate on questions while serving: run `python -m http.server` and edit `questions.json` or host your JSON bank.
 
-```js
-const POOL = await fetch("mybank.json").then(r => r.json()).then(flattenBank);
-```
+## Next steps (ideas)
 
-You'll need to wrap the init code in an async IIFE — see the
-`flattenBank` function, which already accepts any of the schema variants
-(`sections`, `categories`, flat arrays, etc.) that `promptukit` supports.
+- Add clearer in-game help modal explaining leverage numbers and penalties.
+- Implement persistent high scores and seeded match replays.
+- Small accessibility improvements: focus outlines, ARIA labels for dynamic elements.
 
-### Expected question fields
+---
 
-The loader is promptukit-tolerant. It reads any of:
-
-- `prompt` / `q` / `question` / `text` — the question text
-- `choices` / `answers` — an array of answer strings
-- `answer` / `correct` / `correct_index` — zero-indexed correct choice
-- `difficulty` — currently informational only
-- `category` — used to group flat lists into sections
-
-Example question:
-
-```json
-{
-  "prompt": "Who directed Ponyo?",
-  "choices": ["Isao Takahata", "Mamoru Hosoda", "Hayao Miyazaki", "Makoto Shinkai"],
-  "answer": 2,
-  "difficulty": "easy"
-}
-```
-
-**Heads up:** `promptukit`'s README shows question banks without an explicit
-`answer` field (the PDF exam flow doesn't need one). For the game, each
-question needs an `answer` index. You may want to extend your bank format,
-or add a tiny script that auto-labels the first choice as correct and
-shuffles on load.
-
-## Design notes / next moves
-
-- **Aesthetic:** Luna/Aero chrome, Tahoma display, glossy beveled buttons,
-  SVG cartoon hands with thick ink outlines. No image assets — everything is
-  CSS gradients + SVG so it stays pixel-sharp at any zoom.
-- **Payout formula:** `payout = max(20, |leverageDiff| * 5)`. Negative leverage
-  (wrong answers, no-shows) can also *lose* you up to $15 in a round.
-- **Hand animation:** the winner's hand settles near center; the loser's gets
-  shoved back toward their sideline and rotated off-angle, scaled by
-  leverage intensity. The briefcase slides toward the winner.
-- **Ideas to try next:**
-  - Seeded runs (steal the pattern from your Pitch Perfect roguelike)
-  - "Tell" system — a micro-animation leaks which choice the opponent is
-    about to pick on the Simultaneous round
-  - Power-up cards (Theme Park had them too): "Double or nothing",
-    "Strike forgiveness", "Reveal one wrong answer"
-  - Question difficulty → payout multiplier
-  - Online multiplayer via a tiny WebSocket relay
+If you want, I can also add a short in-game HELP modal and update the pause/menu text. This README edit completes the v0.1.1 doc updates.
