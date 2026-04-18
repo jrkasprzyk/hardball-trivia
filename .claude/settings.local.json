@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(curl -si 'http://127.0.0.1:8000/trivia')"
+      "Bash(curl -si 'http://127.0.0.1:8000/trivia')",
+      "Bash(netstat -ano)",
+      "Bash(tasklist /FI \"PID eq 24864\" /FO LIST)",
+      "Bash(tasklist /FI \"PID eq 46620\" /FO LIST)",
+      "Bash(cmd /c \"tasklist /FI \\\\\"PID eq 24864\\\\\" /FO LIST && tasklist /FI \\\\\"PID eq 46620\\\\\" /FO LIST\")",
+      "Bash(cmd /c \"tasklist /FO CSV\")",
+      "Bash(cmd /c \"wmic process where \\\\\"ProcessId=24864\\\\\" get Name,CommandLine 2>nul\")",
+      "Bash(cmd /c \"wmic process where \\\\\"ProcessId=46620\\\\\" get Name,CommandLine 2>nul\")"
     ]
   }
 }

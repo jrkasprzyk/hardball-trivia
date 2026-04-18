@@ -647,6 +647,23 @@
   }
   #deal-banner.shown { transform: translate(-50%, 0) scale(1); }
 
+  #briefcase-amount {
+    position: absolute;
+    left: 50%;
+    top: 6%;
+    transform: translateX(-50%);
+    background: var(--gold);
+    color: #2a1800;
+    font-family: "Impact", Tahoma, sans-serif;
+    font-size: 13px;
+    padding: 2px 8px;
+    border: 2px solid var(--gold-dk);
+    border-radius: 3px;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    pointer-events: none;
+  }
+
   .money-fly {
     position: absolute;
     width: 40px; height: 22px;
@@ -787,6 +804,7 @@
         <button class="luna-btn" id="btn-rounds-5">5 Rounds</button>
         <button class="luna-btn" id="btn-rounds-7">7 Rounds</button>
         <button class="luna-btn" id="btn-help">Help</button>
+        <button class="luna-btn" id="btn-reload-bank">&#8635; Reload Bank</button>
       </div>
       <div style="margin-top:8px;">
         <button class="luna-btn" id="join-p1">P1: CPU (Press Y to join)</button>
@@ -827,6 +845,7 @@
           <div class="round-label">ROUND <span id="round-num">1</span> / <span id="round-total">5</span></div>
           <div class="round-type" id="round-type">BUZZ-IN</div>
           <div class="section-title" id="section-title">General Knowledge</div>
+          <div class="section-title" id="briefcase-hud" style="color: var(--gold); font-size: 12px; font-weight: bold; letter-spacing: 1px;"></div>
         </div>
 
         <div class="player-panel p2" id="panel-p2">
@@ -910,6 +929,8 @@
             <circle cx="45" cy="38" r="8" fill="#d4a810" stroke="#000" stroke-width="2"/>
             <text x="45" y="43" font-family="Impact" font-size="14" fill="#3a2500" text-anchor="middle">$</text>
           </svg>
+
+          <div id="briefcase-amount">$???</div>
 
           <div id="deal-table"></div>
 

@@ -56,6 +56,7 @@ const REMOTE_BANK_URL = "http://127.0.0.1:8000/trivia";
 
 // Start with the embedded bank; we'll attempt to load a remote bank below.
 let QUESTION_BANK = EMBEDDED_QUESTION_BANK;
+let remoteBankReady; // promise that resolves when the remote-bank attempt settles (success or failure)
 
 // ---- Normalize: flatten to a single question pool, promptukit-style tolerant ----
 function flattenBank(bank) {
@@ -102,6 +103,7 @@ let RNG_SEED = null;
 let RNG = null;
 let SHUFFLED_INDICES = null;
 let SHUFFLED_CURSOR = 0;
+let GAME_POOL = []; // snapshot of POOL at game start; immutable during a session
 
 function prepareShuffledPool(seedOverride) {
   const params = new URLSearchParams(location.search);
@@ -112,18 +114,20 @@ function prepareShuffledPool(seedOverride) {
     if (!Number.isFinite(parsed) || isNaN(parsed)) {
       seed = Utils.xfnv1a(String(seedParam));
     } else {
-      seed = parsed >>> 0;
+      seed = parsed;
     }
   } else {
-    seed = Date.now() >>> 0;
+    // Use full ms timestamp — >>> 0 would truncate to 32-bit, collapsing many timestamps to the same seed
+    seed = Date.now();
   }
 
+  GAME_POOL = POOL.slice(); // snapshot pool so remote-bank loads don't affect this session
   RNG_SEED = seed;
   RNG = Utils.createRng(RNG_SEED);
-  SHUFFLED_INDICES = Array.from({ length: POOL.length }, (_, i) => i);
+  SHUFFLED_INDICES = Array.from({ length: GAME_POOL.length }, (_, i) => i);
   Utils.seededShuffle(SHUFFLED_INDICES, RNG);
   SHUFFLED_CURSOR = 0;
-  console.log("Prepared shuffled pool — seed:", RNG_SEED, "POOL.length:", POOL.length, "SHUFFLED_INDICES.length:", SHUFFLED_INDICES.length, "SHUFFLED_CURSOR:", SHUFFLED_CURSOR);
+  console.log("Prepared shuffled pool — seed:", RNG_SEED, "GAME_POOL.length:", GAME_POOL.length, "SHUFFLED_INDICES.length:", SHUFFLED_INDICES.length, "SHUFFLED_CURSOR:", SHUFFLED_CURSOR);
   if (typeof els !== 'undefined' && els.status) els.status.textContent = `Seed: ${RNG_SEED}`;
 }
 
@@ -141,12 +145,15 @@ const state = {
     { id: 2, cash: 0, leverage: 0, strikes: 0, lockedOut: false, pickedChoice: null, answeredCorrect: false, strikesThisRound: 0, isHuman: false }
   ],
   phase: "idle",     // idle | question | deal | between
+  roundQuestions: 0,
   usedQuestions: new Set(),
   roundStart: 0,
   timerTotalMs: 12000,
   timerTimeout: null,
   aiTimers: [],
-  firstCorrectPlayer: null
+  firstCorrectPlayer: null,
+  briefcaseValue: 0,
+  warningTimeout: null
 };
 
 // ---- DOM refs ----
@@ -173,14 +180,18 @@ const els = {
   dealBannerText: $("deal-banner-text"),
   dealArea: $("deal-area"),
   status: $("status-left"),
+  statusRight: $("status-right"),
   panelP1: $("panel-p1"),
-  panelP2: $("panel-p2")
+  panelP2: $("panel-p2"),
+  briefcaseAmount: $("briefcase-amount")
 };
 
 // Attempt to load remote bank now that `els` is initialized
-(async function tryLoadRemoteBank() {
+function tryLoadRemoteBank() {
+  remoteBankReady = (async () => {
   try {
-    if (els && els.status) els.status.textContent = `Loading question bank from ${REMOTE_BANK_URL}...`;
+    if (els && els.status) els.status.textContent = `Loading question bank…`;
+    if (els && els.statusRight) els.statusRight.textContent = `Bank: loading…`;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(REMOTE_BANK_URL, { signal: controller.signal, cache: "no-store" });
@@ -231,30 +242,33 @@ const els = {
         console.debug('Remote bank sample snippet:', JSON.stringify(data && (Array.isArray(data) ? data.slice(0,3) : { keys: Object.keys(data).slice(0,10) }), null, 2));
         QUESTION_BANK = EMBEDDED_QUESTION_BANK;
         POOL = flattenBank(QUESTION_BANK);
-        if (els && els.status) els.status.textContent = "Remote bank empty — using embedded question bank";
+        if (els && els.statusRight) els.statusRight.textContent = "Bank: embedded (remote empty)";
+        if (els && els.status) els.status.textContent = "Ready.";
       } else {
-        if (els && els.status) els.status.textContent = `Using remote question bank (${QUESTION_BANK.title || 'remote'})`;
+        const label = QUESTION_BANK.title || 'remote';
+        if (els && els.statusRight) els.statusRight.textContent = `Bank: ${label} (${POOL.length} Qs)`;
+        if (els && els.status) els.status.textContent = "Ready.";
         console.log("Loaded question bank from remote:", REMOTE_BANK_URL);
       }
-      // If RNG/shuffle already prepared, refresh shuffled indices to match new pool length
-      if (typeof RNG !== 'undefined' && RNG && Array.isArray(SHUFFLED_INDICES)) {
-        SHUFFLED_INDICES = Array.from({ length: POOL.length }, (_, i) => i);
-        Utils.seededShuffle(SHUFFLED_INDICES, RNG);
-        SHUFFLED_CURSOR = 0;
-      }
+      // POOL is now updated; GAME_POOL will be snapshotted on next startGame() call.
+      // Do NOT reshuffle here — that would corrupt any in-progress game session.
     } else {
       throw new Error("Invalid JSON from remote bank");
     }
   } catch (err) {
     console.warn("Remote question bank not available:", err);
-    if (els && els.status) els.status.textContent = "Using embedded question bank";
+    if (els && els.statusRight) els.statusRight.textContent = "Bank: embedded (offline)";
+    if (els && els.status) els.status.textContent = "Ready.";
   }
-})();
+  })();
+}
+tryLoadRemoteBank();
 
 // ============================================================
 // SETUP
 // ============================================================
 $("btn-start").addEventListener("click", startGame);
+$("btn-reload-bank").addEventListener("click", tryLoadRemoteBank);
 $("btn-rounds-3").addEventListener("click", () => setRounds(3));
 $("btn-rounds-5").addEventListener("click", () => setRounds(5));
 $("btn-rounds-7").addEventListener("click", () => setRounds(7));
@@ -300,7 +314,12 @@ function setRounds(n) {
   $("round-count-label").textContent = `Playing best of ${n} rounds`;
 }
 
-function startGame() {
+async function startGame() {
+  // Block until the remote-bank attempt settles so POOL is final before we snapshot it
+  if (remoteBankReady) {
+    if (els && els.status) els.status.textContent = "Loading question bank…";
+    await remoteBankReady;
+  }
   state.round = 0;
   // Prepare seeded shuffled pool for this session (seeded from URL or Date.now())
   prepareShuffledPool();
@@ -334,10 +353,13 @@ function nextRound() {
   }
   state.round++;
   state.roundType = ROUND_TYPES[(state.round - 1) % ROUND_TYPES.length];
+  const base = 100 + state.round * 60;
+  state.briefcaseValue = base + Math.floor(Math.random() * 5) * 25;
+  state.roundQuestions = 1;
   // Pick a question not yet used (sampling without replacement via shuffled indices)
   let q = randomQuestion();
   if (!q) {
-    console.error('nextRound: randomQuestion returned undefined', { POOL_length: (Array.isArray(POOL) ? POOL.length : 0), SHUFFLED_length: (Array.isArray(SHUFFLED_INDICES) ? SHUFFLED_INDICES.length : 0), SHUFFED_CURSOR });
+    console.error('nextRound: randomQuestion returned undefined', { GAME_POOL_length: GAME_POOL.length, SHUFFLED_length: (Array.isArray(SHUFFLED_INDICES) ? SHUFFLED_INDICES.length : 0), SHUFFLED_CURSOR });
     q = { prompt: 'No question available', choices: ['OK'], answer: 0, difficulty: 'easy', category: 'System' };
   }
   state.question = q;
@@ -354,17 +376,22 @@ function nextRound() {
   // Update UI labels
   els.roundNum.textContent = state.round;
   els.roundTotal.textContent = state.totalRounds;
-  els.roundType.textContent = ROUND_LABELS[state.roundType];
+  els.roundType.textContent = roundTypeLabel();
   els.sectionTitle.textContent = q.category;
   updateHUD();
   resetDealScene();
 
   showModal({
     title: "ROUND " + state.round,
-    subtitle: ROUND_LABELS[state.roundType],
+    subtitle: ROUND_LABELS[state.roundType] + "  —  BRIEFCASE: $" + state.briefcaseValue,
     detail: roundTypeBlurb(state.roundType),
     actions: [{ label: "▶ Begin", primary: true, onclick: () => { hideModal(); beginQuestion(); } }]
   });
+}
+
+function roundTypeLabel() {
+  const maxQ = state.roundType === "strikes" ? 27 : 10;
+  return `${ROUND_LABELS[state.roundType]} (${state.roundQuestions}/${maxQ})`;
 }
 
 function roundTypeBlurb(t) {
@@ -375,42 +402,26 @@ function roundTypeBlurb(t) {
 }
 
 function randomQuestion() {
-  // Defensive: if POOL is empty (e.g., remote bank returned no questions),
-  // fall back to the embedded bank and re-prepare the shuffled pool.
-  if (!Array.isArray(POOL) || POOL.length === 0) {
+  if (!Array.isArray(GAME_POOL) || GAME_POOL.length === 0) {
     console.error("Question pool is empty — falling back to embedded bank.");
     QUESTION_BANK = EMBEDDED_QUESTION_BANK;
     POOL = flattenBank(QUESTION_BANK);
-    // Ensure shuffled indices are prepared for the new pool
-    try {
-      prepareShuffledPool();
-    } catch (e) {
-      console.error('Failed to prepare shuffled pool during fallback:', e);
-    }
-    if (!Array.isArray(POOL) || POOL.length === 0) {
-      // Last-resort placeholder question so the UI doesn't crash
+    prepareShuffledPool();
+    if (!Array.isArray(GAME_POOL) || GAME_POOL.length === 0) {
       return { prompt: 'No questions available', choices: ['OK'], answer: 0, difficulty: 'easy', category: 'System' };
     }
   }
-  console.debug("randomQuestion — POOL.length:", POOL.length, "SHUFFLED_INDICES_len:", (SHUFFLED_INDICES ? SHUFFLED_INDICES.length : 'nil'), "SHUFFLED_CURSOR:", SHUFFLED_CURSOR, "RNG_SEED:", RNG_SEED);
-  // Ensure shuffled indices exist and are in sync with POOL
-  if (!SHUFFLED_INDICES || SHUFFLED_INDICES.length !== POOL.length || SHUFFLED_CURSOR >= SHUFFLED_INDICES.length) {
-    if (!RNG_SEED || !RNG) {
-      prepareShuffledPool();
-    } else {
-      // reshuffle using derived seed so repeated cycles differ
-      const newSeed = (RNG_SEED + Date.now()) >>> 0;
-      RNG_SEED = newSeed;
-      RNG = Utils.createRng(RNG_SEED);
-      SHUFFLED_INDICES = Array.from({ length: POOL.length }, (_, i) => i);
-      Utils.seededShuffle(SHUFFLED_INDICES, RNG);
-      SHUFFLED_CURSOR = 0;
-      if (els && els.status) els.status.textContent = `Seed: ${RNG_SEED}`;
-    }
+  // Reshuffle only when all questions have been drawn (sampling without replacement cycles)
+  if (!SHUFFLED_INDICES || SHUFFLED_CURSOR >= SHUFFLED_INDICES.length) {
+    const newSeed = (RNG_SEED + Date.now()) >>> 0;
+    RNG_SEED = newSeed;
+    RNG = Utils.createRng(RNG_SEED);
+    SHUFFLED_INDICES = Array.from({ length: GAME_POOL.length }, (_, i) => i);
+    Utils.seededShuffle(SHUFFLED_INDICES, RNG);
+    SHUFFLED_CURSOR = 0;
   }
   const idx = SHUFFLED_INDICES[SHUFFLED_CURSOR++];
-  console.debug("randomQuestion — idx:", idx, "questionExists:", !!POOL[idx], POOL[idx] ? (POOL[idx].prompt || POOL[idx].q || POOL[idx].question) : null);
-  return POOL[idx];
+  return GAME_POOL[idx];
 }
 
 function beginQuestion() {
@@ -459,6 +470,7 @@ function escapeHTML(s) {
 // TIMER
 // ============================================================
 function startTimer(ms) {
+  if (state.warningTimeout) { clearTimeout(state.warningTimeout); state.warningTimeout = null; }
   state.roundStart = performance.now();
   els.timerFill.style.transition = "none";
   els.timerFill.style.width = "100%";
@@ -471,12 +483,15 @@ function startTimer(ms) {
   clearTimeout(state.timerTimeout);
   state.timerTimeout = setTimeout(() => onTimeUp(), ms);
 
-  // Warning flash at 25%
-  setTimeout(() => els.timerFill.classList.add("warning"), ms * 0.75);
+  state.warningTimeout = setTimeout(() => {
+    state.warningTimeout = null;
+    els.timerFill.classList.add("warning");
+  }, ms * 0.75);
 }
 
 function stopTimer() {
   clearTimeout(state.timerTimeout);
+  if (state.warningTimeout) { clearTimeout(state.warningTimeout); state.warningTimeout = null; }
   // Clear any scheduled AI timeouts for this question
   if (state.aiTimers && state.aiTimers.length) {
     state.aiTimers.forEach(t => clearTimeout(t));
@@ -525,7 +540,7 @@ function scheduleAIForQuestion() {
 
     let rt;
     if (state.roundType === 'buzz') {
-      rt = 200 + Math.random() * 800 * (1 - baseAcc * 0.6);
+      rt = 900 + Math.random() * 1400 * (1 - baseAcc * 0.4);
     } else {
       const max = Math.max(300, state.timerTotalMs - 400);
       rt = 300 + Math.random() * Math.max(0, max - 300);
@@ -533,7 +548,7 @@ function scheduleAIForQuestion() {
 
     const tid = setTimeout(() => {
       if (state.phase !== 'question') return;
-      if (state.players[i].lockedOut) return;
+      if (state.players[i].lockedOut || state.players[i].isHuman) return;
       handlePlayerInput(playerNum, chosenIdx);
     }, rt);
     state.aiTimers.push(tid);
@@ -562,7 +577,9 @@ document.addEventListener("keydown", (e) => {
   if (e.repeat) return;
   const m = KEY_MAP[e.key];
   if (m && state.phase === "question") {
-    handlePlayerInput(m.player, m.idx);
+    if (state.players[m.player - 1].isHuman) {
+      handlePlayerInput(m.player, m.idx);
+    }
   }
   if (e.key === "Escape" && state.phase !== "idle") {
     // Quick reset shortcut
@@ -691,8 +708,8 @@ function handlePlayerInput(playerNum, choiceIdx) {
     if (correct) {
       state.firstCorrectPlayer = playerNum;
       p.answeredCorrect = true;
-      // Buzz-in immediately resolves
       stopTimer();
+      state.phase = "resolving"; // block further input immediately
       setTimeout(() => resolveQuestion(), 300);
     } else {
       // Wrong buzz = lockout for this question
@@ -708,6 +725,7 @@ function handlePlayerInput(playerNum, choiceIdx) {
     // If both players have locked in, speed up to reveal both at the same time.
     if (state.players[0].pickedChoice !== null && state.players[1].pickedChoice !== null) {
       stopTimer();
+      state.phase = "resolving";
       setTimeout(() => resolveQuestion(), 500);
     }
   } else if (state.roundType === "strikes") {
@@ -719,6 +737,7 @@ function handlePlayerInput(playerNum, choiceIdx) {
     if (correct) {
       p.answeredCorrect = true;
       stopTimer();
+      state.phase = "resolving";
       setTimeout(() => resolveQuestion(), 400);
     } else {
       p.strikesThisRound++;
@@ -738,8 +757,9 @@ function handlePlayerInput(playerNum, choiceIdx) {
 
 function checkBothLockedOrAnswered() {
   const both = state.players.every(p => p.lockedOut || p.answeredCorrect);
-  if (both) {
+  if (both && state.phase === "question") {
     stopTimer();
+    state.phase = "resolving";
     setTimeout(() => resolveQuestion(), 400);
   }
 }
@@ -771,7 +791,7 @@ function flashChoice(idx, cls) {
 // RESOLUTION
 // ============================================================
 function resolveQuestion() {
-  if (state.phase !== "question") return;
+  if (state.phase !== "question" && state.phase !== "resolving") return;
   state.phase = "deal";
   stopTimer();
 
@@ -787,24 +807,23 @@ function resolveQuestion() {
     updateAllPressIndicators();
   }
 
-  // Compute leverage per round type
+  // Compute leverage per round type (incremental — accumulates across questions in a round)
   if (state.roundType === "buzz") {
     if (state.firstCorrectPlayer) {
-      state.players[state.firstCorrectPlayer - 1].leverage = 100;
+      state.players[state.firstCorrectPlayer - 1].leverage += 50;
     }
-    // Locked-out players get -20 leverage (bad position at the table)
     for (const p of state.players) {
-      if (p.lockedOut && !p.answeredCorrect) p.leverage = -20;
+      if (p.lockedOut && !p.answeredCorrect) p.leverage -= 20;
     }
   } else if (state.roundType === "simul") {
     for (const p of state.players) {
       if (p.pickedChoice === correct) {
         p.answeredCorrect = true;
-        p.leverage = 60;
+        p.leverage += 30;
       } else if (p.pickedChoice === null) {
-        p.leverage = -30; // no answer is worse than wrong
+        p.leverage -= 20;
       } else {
-        p.leverage = -10;
+        p.leverage -= 10;
       }
     }
   } else if (state.roundType === "strikes") {
@@ -812,17 +831,15 @@ function resolveQuestion() {
     for (const p of state.players) {
       p.strikes = Math.min(3, p.strikes + p.strikesThisRound);
     }
-    // Correct-answer bonus + remove one of the player's own strikes
     for (let i = 0; i < 2; i++) {
       const p = state.players[i];
       if (p.answeredCorrect) {
-        p.leverage = 80;
-        // Remove one of the player's own strikes (if any)
+        p.leverage += 35;
         if (p.strikes > 0) p.strikes--;
       } else if (p.lockedOut) {
-        p.leverage = -30;
+        p.leverage -= 25;
       } else {
-        p.leverage = -10;
+        p.leverage -= 5;
       }
     }
   }
@@ -837,33 +854,37 @@ function resolveQuestion() {
 // DEAL PHASE - the hand-shove animation
 // ============================================================
 function resetDealScene() {
-  // Return hands to starting positions, no transform overrides
   els.handP1.style.left = "2%";
   els.handP1.style.transform = "";
   els.handP2.style.right = "2%";
   els.handP2.style.transform = "scaleX(-1)";
   els.briefcase.style.transform = "translateX(-50%)";
   els.dealBanner.classList.remove("shown");
+  if (els.briefcaseAmount && state.briefcaseValue) {
+    els.briefcaseAmount.textContent = "$" + state.briefcaseValue;
+  }
 }
 
 function startNextQuestionSameRound() {
-  // Continue the current 'strikes' round with another question (do not advance the round counter)
+  state.roundQuestions++;
   const q = randomQuestion();
   state.question = q;
-  // Reset per-question state but keep accumulated strikes
   for (const p of state.players) {
-    p.leverage = 0;
     p.pickedChoice = null;
     p.answeredCorrect = false;
     p.strikesThisRound = 0;
-    // lockedOut if accumulated strikes already reached limit
-    p.lockedOut = (p.strikes >= 3);
+    p.lockedOut = (state.roundType === "strikes") ? (p.strikes >= 3) : false;
   }
   state.firstCorrectPlayer = null;
   els.sectionTitle.textContent = q.category;
+  els.roundType.textContent = roundTypeLabel();
+  els.prompt.textContent = q.prompt;
   renderChoices();
-  // Small delay to allow deal visuals to clear
-  setTimeout(() => beginQuestion(), 300);
+  // Show a "ready" timer state during the reading window so it's clear the clock hasn't started
+  els.timerFill.style.transition = "none";
+  els.timerFill.style.width = "100%";
+  els.timerFill.classList.remove("warning");
+  setTimeout(() => beginQuestion(), 3000);
 }
 
 function runDealPhase() {
@@ -874,16 +895,11 @@ function runDealPhase() {
   const winner = diff > 0 ? 1 : (diff < 0 ? 2 : 0);
   const absLev = Math.abs(diff);
 
-  // Map leverage diff to a "push distance". The hand of the LOSER gets
-  // shoved past center; the winner's hand stays near center with a
-  // dominant posture.
-  // absLev ranges 0 to ~130. We'll normalize to 0..1 for push intensity.
-  const intensity = Math.min(1, absLev / 100);
+  // Map leverage diff to a "push distance". absLev can be large with accumulated leverage.
+  const intensity = Math.min(1, absLev / 150);
 
-  // Payout: each 10 leverage points in the winner's favor = $50.
-  // Losing player actually loses $20 if they had negative leverage.
-  const payout = winner ? Math.max(20, Math.round(absLev * 5)) : 0;
-  const penalty = winner ? 0 : 0; // handled below for draws
+  // Winner takes the full briefcase. Leverage determines who wins, not the size of the payout.
+  const payout = winner ? state.briefcaseValue : 0;
 
   // ---- Animate hands ----
   // We'll position by left/right percentages.
@@ -908,21 +924,21 @@ function runDealPhase() {
   setTimeout(() => {
     let bannerText, color;
     if (winner === 1) {
-      bannerText = `PLAYER 1 TAKES THE DEAL: +$${payout}`;
+      bannerText = `PLAYER 1 WINS THE BRIEFCASE  +$${payout}`;
       color = "var(--p1-color)";
       state.players[0].cash += payout;
     } else if (winner === 2) {
-      bannerText = `PLAYER 2 TAKES THE DEAL: +$${payout}`;
+      bannerText = `PLAYER 2 WINS THE BRIEFCASE  +$${payout}`;
       color = "var(--p2-color)";
       state.players[1].cash += payout;
     } else {
       bannerText = "STALEMATE — NO DEAL";
       color = "#555";
     }
-    // Apply small penalty if either player had negative leverage (they overextended)
+    // Penalty for finishing the round with negative leverage
     for (const p of state.players) {
-      if (p.leverage < 0 && winner !== p.id) {
-        const loss = Math.min(p.cash, 15);
+      if (p.leverage < 0) {
+        const loss = Math.min(p.cash, Math.min(30, Math.floor(Math.abs(p.leverage) / 5)));
         p.cash -= loss;
       }
     }
@@ -945,12 +961,14 @@ function runDealPhase() {
     els.dealBanner.classList.remove("shown");
     setTimeout(() => {
       if (state.roundType === "strikes") {
-        // If no player has reached 3 strikes yet, continue asking questions
         const strikeLimitReached = state.players.some(p => p.strikes >= 3);
-        if (!strikeLimitReached) {
+        if (!strikeLimitReached && state.roundQuestions < 27) {
           startNextQuestionSameRound();
           return;
         }
+      } else if (state.roundQuestions < 10) {
+        startNextQuestionSameRound();
+        return;
       }
       nextRound();
     }, 900);
@@ -1002,6 +1020,11 @@ function updateHUD() {
   $("leverage-p2").textContent = state.players[1].leverage;
   renderStrikes(1);
   renderStrikes(2);
+  if (state.briefcaseValue) {
+    if (els.briefcaseAmount) els.briefcaseAmount.textContent = "$" + state.briefcaseValue;
+    const hudEl = $("briefcase-hud");
+    if (hudEl) hudEl.textContent = "BRIEFCASE  $" + state.briefcaseValue;
+  }
   // Highlight who's "active" (has the most leverage this round)
   els.panelP1.classList.toggle("active", state.players[0].leverage > state.players[1].leverage && state.players[0].leverage > 0);
   els.panelP2.classList.toggle("active", state.players[1].leverage > state.players[0].leverage && state.players[1].leverage > 0);
@@ -1058,8 +1081,9 @@ function showHelpModal() {
     '- Three Strikes: Wrong answers add strikes. The round continues with new questions until someone reaches 3 strikes (locked out). Correct answers remove one of your strikes.',
     '',
     'Leverage & payout:',
-    '- Leverage is a per-round numeric score that decides who wins the briefcase.',
-    '- Payout = max(20, Math.round(|leverageDiff| * 5)). Negative leverage can reduce cash by up to $15 in a round.',
+    '- Each round has a briefcase worth a set amount (shown at round start and on the table).',
+    '- Leverage accumulates across all questions in a round. The player with more leverage wins the full briefcase.',
+    '- Negative leverage costs you cash at round end (up to $30). Play sharp to avoid going negative.',
     '',
     'Tips:',
     '- Simultaneous picks are hidden until reveal; press indicators appear only after resolution.',
