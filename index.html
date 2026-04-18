@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hardball - The Trivia Negotiation</title>
+<style>
+  /* ============================================================
+     HARDBALL - 2008 Luna/Aero-inspired stylesheet
+     Fonts: Tahoma + Segoe UI. Gradients, bevels, drop shadows.
+     ============================================================ */
+
+  :root {
+    --luna-blue-top: #4f9dee;
+    --luna-blue-mid: #2c6fc4;
+    --luna-blue-bot: #1a4c91;
+    --luna-silver-top: #f4f6fa;
+    --luna-silver-mid: #d4dae3;
+    --luna-silver-bot: #a5adbb;
+    --aero-glass: rgba(220, 232, 250, 0.75);
+    --desk-green: #3a6b1b;
+    --desk-green-dk: #234010;
+    --felt-red: #7d1a1a;
+    --bevel-light: rgba(255,255,255,0.85);
+    --bevel-dark: rgba(0,0,0,0.45);
+    --p1-color: #c4202a;
+    --p1-color-dk: #7a1016;
+    --p2-color: #1769c2;
+    --p2-color-dk: #0a3d7a;
+    --gold: #f3c63d;
+    --gold-dk: #a6821a;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: "Segoe UI", Tahoma, "Trebuchet MS", sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  body {
+    /* A classic grassy XP-like desktop... but dimmer, more "boardroom" */
+    background:
+      radial-gradient(ellipse at top, #6aa4e8 0%, #2c5fa0 60%, #14335f 100%);
+    color: #1a1a1a;
+  }
+
+  /* ============================================================
+     WINDOW CHROME - the fake "application" frame
+     ============================================================ */
+  #window {
+    position: absolute;
+    top: 2%;
+    left: 2%;
+    right: 2%;
+    bottom: 2%;
+    background: linear-gradient(to bottom, #ece9d8, #d8d2b8);
+    border: 1px solid #404040;
+    border-radius: 8px 8px 4px 4px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.3) inset,
+      0 10px 40px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #titlebar {
+    height: 28px;
+    background: linear-gradient(to bottom,
+      #0a6dc0 0%,
+      #1683e4 10%,
+      #2593ef 50%,
+      #0c6bb8 90%,
+      #0957a4 100%);
+    border-bottom: 1px solid #002f6b;
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    color: white;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.6);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  #titlebar .icon {
+    width: 16px;
+    height: 16px;
+    background: var(--gold);
+    border: 1px solid var(--gold-dk);
+    border-radius: 3px;
+    margin-right: 6px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.4) inset;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--gold-dk);
+    text-shadow: none;
+  }
+
+  #titlebar .title-text { flex: 1; }
+
+  #titlebar .win-buttons { display: flex; gap: 2px; }
+  #titlebar .win-btn {
+    width: 22px; height: 20px;
+    background: linear-gradient(to bottom, #5ba4e6, #1865b3);
+    border: 1px solid #0a3b6f;
+    border-radius: 2px;
+    color: white;
+    font-size: 10px;
+    font-family: "Marlett", "Segoe UI", sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    cursor: default;
+  }
+  #titlebar .win-btn.close {
+    background: linear-gradient(to bottom, #e25454, #a61010);
+    border-color: #6a0404;
+  }
+
+  #menubar {
+    background: linear-gradient(to bottom, #f5f4ea 0%, #e5e2d0 100%);
+    border-bottom: 1px solid #a0a0a0;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: #222;
+    flex-shrink: 0;
+  }
+  #menubar span { margin-right: 14px; }
+  #menubar span u { text-decoration: underline; }
+
+  #stage {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at center, #3d7a24 0%, #1e4410 90%);
+  }
+
+  /* ============================================================
+     SCENE MANAGER
+     ============================================================ */
+  .scene {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+  }
+  .scene.active { display: flex; }
+
+  /* ============================================================
+     TITLE SCREEN
+     ============================================================ */
+  #scene-title {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+  }
+
+  #scene-title h1 {
+    font-family: "Impact", "Arial Black", Tahoma, sans-serif;
+    font-size: clamp(48px, 9vw, 120px);
+    margin: 0;
+    color: var(--gold);
+    text-shadow:
+      3px 3px 0 var(--gold-dk),
+      6px 6px 0 #000,
+      0 0 30px rgba(255, 220, 100, 0.5);
+    letter-spacing: 4px;
+    transform: skewX(-5deg);
+    -webkit-text-stroke: 2px #000;
+  }
+
+  #scene-title h2 {
+    font-family: Tahoma, sans-serif;
+    color: white;
+    font-size: clamp(14px, 2vw, 22px);
+    margin: 4px 0 28px 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    font-style: italic;
+  }
+
+  .title-panel {
+    background: linear-gradient(to bottom,
+      var(--luna-silver-top), var(--luna-silver-mid) 60%, var(--luna-silver-bot));
+    border: 2px solid #3a3a3a;
+    border-radius: 6px;
+    padding: 18px 28px;
+    max-width: 560px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.6) inset,
+      0 6px 20px rgba(0,0,0,0.5);
+    margin-bottom: 16px;
+  }
+  .title-panel p {
+    margin: 4px 0;
+    font-size: 13px;
+    color: #222;
+  }
+  .title-panel .kbd-row {
+    display: flex;
+    justify-content: space-around;
+    margin: 10px 0;
+    gap: 16px;
+  }
+  .kbd-block {
+    flex: 1;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+  .kbd-block.p1 {
+    background: linear-gradient(to bottom, #ffeaea, #ffc9cc);
+    border-color: var(--p1-color-dk);
+  }
+  .kbd-block.p2 {
+    background: linear-gradient(to bottom, #e6f0ff, #c3d8f5);
+    border-color: var(--p2-color-dk);
+  }
+  .kbd-block h3 {
+    margin: 0 0 6px 0;
+    font-size: 13px;
+  }
+  .kbd-block.p1 h3 { color: var(--p1-color-dk); }
+  .kbd-block.p2 h3 { color: var(--p2-color-dk); }
+  .kbd {
+    display: inline-block;
+    min-width: 18px;
+    padding: 1px 5px;
+    background: white;
+    border: 1px solid #666;
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    font-family: Consolas, monospace;
+    font-size: 11px;
+    margin: 0 1px;
+  }
+
+  /* ============================================================
+     LUNA BUTTON - that glossy pill button
+     ============================================================ */
+  .luna-btn {
+    display: inline-block;
+    padding: 10px 28px;
+    font-family: Tahoma, "Segoe UI", sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    color: #1a1a1a;
+    background: linear-gradient(to bottom,
+      #fdfdfd 0%,
+      #e3e3e3 50%,
+      #c8c8c8 51%,
+      #e6e6e6 100%);
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.8) inset,
+      0 2px 3px rgba(0,0,0,0.3);
+    cursor: pointer;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+    margin: 4px;
+  }
+  .luna-btn:hover {
+    background: linear-gradient(to bottom, #fff9c6, #f4d060 50%, #d69d20 51%, #e8c055);
+    border-color: #704f00;
+  }
+  .luna-btn:active {
+    background: linear-gradient(to bottom, #c8c8c8, #e3e3e3);
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.1) inset,
+      0 1px 0 rgba(255,255,255,0.4) inset;
+    transform: translateY(1px);
+  }
+  .luna-btn.primary {
+    background: linear-gradient(to bottom, #5ba4e6 0%, #2178d0 50%, #0f5ba6 51%, #2888da 100%);
+    color: white;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+    border-color: #0a3b6f;
+  }
+  .luna-btn.primary:hover {
+    background: linear-gradient(to bottom, #7cc0fa, #3a98ea 50%, #1e74c4 51%, #44a5ef 100%);
+  }
+
+  /* ============================================================
+     GAME SCENE LAYOUT
+     ============================================================ */
+  #scene-game {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  #hud {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .player-panel {
+    background: linear-gradient(to bottom, var(--luna-silver-top), var(--luna-silver-mid));
+    border: 2px solid;
+    border-radius: 6px;
+    padding: 8px 12px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.6) inset, 0 3px 6px rgba(0,0,0,0.4);
+  }
+  .player-panel.p1 { border-color: var(--p1-color-dk); }
+  .player-panel.p2 { border-color: var(--p2-color-dk); }
+  .player-panel.active {
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.6) inset,
+                0 0 16px 3px var(--gold),
+                0 3px 6px rgba(0,0,0,0.4);
+  }
+
+  .player-panel .name {
+    font-family: Tahoma, sans-serif;
+    font-weight: bold;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .player-panel.p1 .name { color: var(--p1-color-dk); }
+  .player-panel.p2 .name { color: var(--p2-color-dk); }
+
+  .pawn {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid #000;
+    display: inline-block;
+  }
+  .pawn.p1 { background: radial-gradient(circle at 30% 30%, #ff7a82, var(--p1-color) 60%, var(--p1-color-dk)); }
+  .pawn.p2 { background: radial-gradient(circle at 30% 30%, #7ab6ef, var(--p2-color) 60%, var(--p2-color-dk)); }
+
+  .stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-top: 4px;
+    gap: 10px;
+  }
+
+  .stat-block {
+    flex: 1;
+    background: white;
+    border: 1px solid #888;
+    border-radius: 3px;
+    padding: 3px 6px;
+    text-align: center;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset;
+  }
+  .stat-label {
+    font-size: 10px;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .stat-value {
+    font-family: "Courier New", Consolas, monospace;
+    font-size: 16px;
+    font-weight: bold;
+    color: #111;
+  }
+  .stat-value.cash { color: var(--desk-green); }
+  .stat-value.strikes { color: var(--p1-color-dk); }
+
+  .strikes-visual {
+    display: inline-flex;
+    gap: 3px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  .strike-x {
+    width: 14px; height: 14px;
+    border: 1px solid #555;
+    border-radius: 2px;
+    background: #eee;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 12px;
+    color: #999;
+  }
+  .strike-x.active {
+    background: linear-gradient(to bottom, #ff6060, #a00000);
+    color: white;
+    border-color: #500;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+  }
+
+  #round-info {
+    background: linear-gradient(to bottom, #1a1a1a, #3a3a3a);
+    color: var(--gold);
+    border: 2px solid var(--gold-dk);
+    border-radius: 6px;
+    padding: 6px 16px;
+    text-align: center;
+    font-family: Tahoma, sans-serif;
+    min-width: 180px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.2) inset, 0 3px 6px rgba(0,0,0,0.4);
+  }
+  #round-info .round-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #ccc;
+  }
+  #round-info .round-type {
+    font-size: 16px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  }
+  #round-info .section-title {
+    font-size: 10px;
+    color: #bbb;
+    font-style: italic;
+  }
+
+  /* ============================================================
+     MAIN PLAY AREA - question card + deal area
+     ============================================================ */
+  #play-area {
+    flex: 1;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 8px;
+    min-height: 0;
+  }
+
+  #question-card {
+    background: linear-gradient(to bottom, #fffef5, #f0edd5);
+    border: 3px solid #888350;
+    border-radius: 6px;
+    padding: 14px 20px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.7) inset, 0 4px 10px rgba(0,0,0,0.4);
+    position: relative;
+  }
+
+  #question-prompt {
+    font-family: Tahoma, sans-serif;
+    font-size: clamp(16px, 2.4vw, 24px);
+    font-weight: bold;
+    color: #1a1a1a;
+    margin: 0 0 10px 0;
+    text-align: center;
+  }
+
+  #choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .choice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: linear-gradient(to bottom, #ffffff, #e4e0c5);
+    border: 2px solid #5a5030;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: Tahoma, sans-serif;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.7) inset;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .choice .letter {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(to bottom, #fff4a0, #d4a810);
+    border: 2px solid #6a4d00;
+    color: #3a2b00;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold;
+    font-family: "Impact", Tahoma, sans-serif;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.7) inset;
+  }
+
+  .choice .text { flex: 1; }
+
+  /* Player press indicators */
+  .choice .press-indicators {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .press-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 2px solid #000;
+    opacity: 0;
+    transition: opacity 0.1s, transform 0.1s;
+  }
+  .press-dot.shown { opacity: 1; transform: scale(1.2); }
+  .press-dot.p1 { background: var(--p1-color); }
+  .press-dot.p2 { background: var(--p2-color); }
+
+  .choice.correct {
+    background: linear-gradient(to bottom, #b7f0b0, #58a54a);
+    border-color: #2a6010;
+    animation: correctPulse 0.5s ease;
+  }
+  .choice.incorrect {
+    background: linear-gradient(to bottom, #f5b0b0, #a52a2a);
+    border-color: #500;
+    color: white;
+  }
+  @keyframes correctPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+
+  /* Three-strikes LOCKED overlay */
+  .choice.locked-p1::after,
+  .choice.locked-p2::after {
+    content: "LOCKED";
+    position: absolute;
+    right: 6px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    padding: 2px 4px;
+    border-radius: 2px;
+    color: white;
+  }
+
+  #timer-bar {
+    height: 10px;
+    margin-top: 10px;
+    background: #d4d0b0;
+    border: 1px solid #5a5030;
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.5);
+  }
+  #timer-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(to bottom, #ffd04a, #d47a10);
+    transition: width 0.1s linear;
+  }
+  #timer-fill.warning {
+    background: linear-gradient(to bottom, #ff6040, #a01010);
+  }
+
+  /* ============================================================
+     DEAL PHASE - the hands and briefcase
+     ============================================================ */
+  #deal-area {
+    position: relative;
+    background:
+      repeating-linear-gradient(45deg,
+        #4a2f10 0px, #4a2f10 2px,
+        #5a3718 2px, #5a3718 4px);
+    border: 3px solid #2a1a08;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.15) inset, inset 0 0 40px rgba(0,0,0,0.6);
+    min-height: 180px;
+  }
+
+  #deal-table {
+    position: absolute;
+    left: 5%; right: 5%;
+    top: 60%;
+    height: 20%;
+    background: linear-gradient(to bottom, var(--desk-green), var(--desk-green-dk));
+    border: 2px solid #1a3008;
+    border-radius: 6px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.15) inset,
+                0 8px 16px rgba(0,0,0,0.6);
+  }
+
+  #briefcase {
+    position: absolute;
+    left: 50%;
+    top: 30%;
+    transform: translateX(-50%);
+    width: 90px;
+    height: 60px;
+    transition: transform 0.4s;
+  }
+
+  .hand {
+    position: absolute;
+    top: 20%;
+    width: 120px;
+    height: 120px;
+    transition: left 0.8s cubic-bezier(0.5, 0.1, 0.3, 1),
+                right 0.8s cubic-bezier(0.5, 0.1, 0.3, 1),
+                transform 0.8s cubic-bezier(0.5, 0.1, 0.3, 1);
+  }
+  #hand-p1 { left: 2%; }
+  #hand-p2 { right: 2%; transform: scaleX(-1); }
+
+  #deal-banner {
+    position: absolute;
+    left: 50%; top: 5%;
+    transform: translate(-50%, 0) scale(0);
+    background: linear-gradient(to bottom, var(--gold), var(--gold-dk));
+    color: #2a1800;
+    padding: 8px 24px;
+    font-family: "Impact", Tahoma, sans-serif;
+    font-size: 20px;
+    border: 3px solid #3a2500;
+    border-radius: 6px;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    white-space: nowrap;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  #deal-banner.shown { transform: translate(-50%, 0) scale(1); }
+
+  .money-fly {
+    position: absolute;
+    width: 40px; height: 22px;
+    background: linear-gradient(to bottom, #5fb56f, #2a6b2a);
+    border: 1px solid #0f3a0f;
+    border-radius: 2px;
+    color: white;
+    font-family: "Impact", serif;
+    font-size: 12px;
+    text-align: center;
+    line-height: 20px;
+    font-weight: bold;
+    pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+
+  /* ============================================================
+     MODAL - round type announcement, game over
+     ============================================================ */
+  #modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  #modal-backdrop.active { display: flex; }
+
+  #modal {
+    background: linear-gradient(to bottom, var(--luna-silver-top), var(--luna-silver-mid));
+    border: 2px solid #404040;
+    border-radius: 8px;
+    padding: 24px 36px;
+    min-width: 320px;
+    text-align: center;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.6) inset, 0 10px 40px rgba(0,0,0,0.6);
+  }
+  #modal h2 {
+    margin: 0 0 8px 0;
+    font-family: "Impact", Tahoma, sans-serif;
+    font-size: 32px;
+    color: var(--luna-blue-bot);
+    text-shadow: 2px 2px 0 rgba(255,255,255,0.5);
+    letter-spacing: 2px;
+  }
+  #modal p { margin: 6px 0; font-size: 13px; }
+
+  /* ============================================================
+     STATUSBAR
+     ============================================================ */
+  #statusbar {
+    background: linear-gradient(to bottom, #f0ecd8, #d8d2b8);
+    border-top: 1px solid #a0a0a0;
+    height: 22px;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 -1px 0 rgba(255,255,255,0.5) inset;
+  }
+  #statusbar .segment {
+    border: 1px solid #a0a0a0;
+    border-top-color: #888;
+    border-left-color: #888;
+    padding: 1px 8px;
+    border-radius: 2px;
+    background: #e8e4d0;
+  }
+</style>
+</head>
+<body>
+
+<div id="window">
+
+  <!-- Fake window titlebar -->
+  <div id="titlebar">
+    <div class="icon">$</div>
+    <div class="title-text">Hardball - The Trivia Negotiation</div>
+    <div class="win-buttons">
+      <div class="win-btn">_</div>
+      <div class="win-btn">□</div>
+      <div class="win-btn close">✕</div>
+    </div>
+  </div>
+
+  <!-- Fake menubar -->
+  <div id="menubar">
+    <span><u>F</u>ile</span>
+    <span><u>G</u>ame</span>
+    <span><u>V</u>iew</span>
+    <span><u>H</u>elp</span>
+  </div>
+
+  <!-- Stage -->
+  <div id="stage">
+
+    <!-- ============================================================
+         TITLE SCENE
+         ============================================================ -->
+    <div class="scene active" id="scene-title">
+      <h1>HARDBALL</h1>
+      <h2>&mdash; The Trivia Negotiation &mdash;</h2>
+
+      <div class="title-panel">
+        <p style="font-weight:bold;">Two players. One question. The correct answer earns leverage. The leverage wins the deal.</p>
+        <div class="kbd-row">
+          <div class="kbd-block p1">
+            <h3>◆ PLAYER 1</h3>
+            <div>Answer: <span class="kbd">1</span><span class="kbd">2</span><span class="kbd">3</span><span class="kbd">4</span></div>
+            <div style="font-size:11px; margin-top:4px;">or gamepad 1</div>
+          </div>
+          <div class="kbd-block p2">
+            <h3>◆ PLAYER 2</h3>
+            <div>Answer: <span class="kbd">7</span><span class="kbd">8</span><span class="kbd">9</span><span class="kbd">0</span></div>
+            <div style="font-size:11px; margin-top:4px;">or gamepad 2</div>
+          </div>
+        </div>
+        <p style="font-size:11.5px; color:#444;">
+          <b>Buzz-In:</b> first correct answer takes the whole pot.<br>
+          <b>Simultaneous:</b> lock in your answer in secret. Correct answers score.<br>
+          <b>Three Strikes:</b> wrong answer = strike. 3 strikes locks you out. A right answer reverses an opponent's strike.
+        </p>
+      </div>
+
+      <div>
+        <button class="luna-btn primary" id="btn-start">▶  Start Game</button>
+        <button class="luna-btn" id="btn-rounds-3">3 Rounds</button>
+        <button class="luna-btn" id="btn-rounds-5">5 Rounds</button>
+        <button class="luna-btn" id="btn-rounds-7">7 Rounds</button>
+      </div>
+      <p style="color:white; font-size:11px; margin-top:12px; text-shadow:1px 1px 2px #000;">
+        <span id="round-count-label">Playing best of 5 rounds</span>
+      </p>
+    </div>
+
+    <!-- ============================================================
+         GAME SCENE
+         ============================================================ -->
+    <div class="scene" id="scene-game">
+
+      <!-- HUD -->
+      <div id="hud">
+        <div class="player-panel p1" id="panel-p1">
+          <div class="name">
+            <span class="pawn p1"></span>
+            <span>PLAYER 1</span>
+            <span class="strikes-visual" id="strikes-p1">
+              <span class="strike-x">X</span>
+              <span class="strike-x">X</span>
+              <span class="strike-x">X</span>
+            </span>
+          </div>
+          <div class="stats">
+            <div class="stat-block">
+              <div class="stat-label">Cash</div>
+              <div class="stat-value cash">$<span id="cash-p1">0</span></div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-label">Leverage</div>
+              <div class="stat-value" id="leverage-p1">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="round-info">
+          <div class="round-label">ROUND <span id="round-num">1</span> / <span id="round-total">5</span></div>
+          <div class="round-type" id="round-type">BUZZ-IN</div>
+          <div class="section-title" id="section-title">General Knowledge</div>
+        </div>
+
+        <div class="player-panel p2" id="panel-p2">
+          <div class="name" style="justify-content: flex-end;">
+            <span class="strikes-visual" id="strikes-p2">
+              <span class="strike-x">X</span>
+              <span class="strike-x">X</span>
+              <span class="strike-x">X</span>
+            </span>
+            <span>PLAYER 2</span>
+            <span class="pawn p2"></span>
+          </div>
+          <div class="stats">
+            <div class="stat-block">
+              <div class="stat-label">Leverage</div>
+              <div class="stat-value" id="leverage-p2">0</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-label">Cash</div>
+              <div class="stat-value cash">$<span id="cash-p2">0</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Play area -->
+      <div id="play-area">
+        <div id="question-card">
+          <p id="question-prompt">Loading...</p>
+          <div id="choices"></div>
+          <div id="timer-bar"><div id="timer-fill"></div></div>
+        </div>
+
+        <div id="deal-area">
+          <!-- The hands are rendered as SVG -->
+          <svg class="hand" id="hand-p1" viewBox="0 0 120 120">
+            <!-- Sleeve -->
+            <path d="M 0,70 L 30,60 L 35,100 L 5,110 Z"
+                  fill="#c4202a" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+            <!-- Cuff -->
+            <path d="M 28,58 L 40,55 L 45,95 L 33,100 Z"
+                  fill="white" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+            <!-- Palm -->
+            <ellipse cx="70" cy="70" rx="32" ry="22"
+                     fill="#f5c89a" stroke="#000" stroke-width="3"/>
+            <!-- Thumb -->
+            <path d="M 90,55 Q 105,50 108,62 Q 108,70 100,72 L 90,70 Z"
+                  fill="#f5c89a" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+            <!-- Fingers (extended for handshake) -->
+            <path d="M 95,65 L 115,60 Q 118,66 115,70 L 95,73 Z"
+                  fill="#f5c89a" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M 95,72 L 117,70 Q 119,75 115,78 L 95,80 Z"
+                  fill="#f5c89a" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M 95,80 L 114,80 Q 116,84 112,86 L 95,87 Z"
+                  fill="#f5c89a" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+            <!-- Knuckle highlights -->
+            <circle cx="100" cy="68" r="1.5" fill="#000"/>
+            <circle cx="102" cy="75" r="1.5" fill="#000"/>
+          </svg>
+
+          <svg class="hand" id="hand-p2" viewBox="0 0 120 120">
+            <path d="M 0,70 L 30,60 L 35,100 L 5,110 Z"
+                  fill="#1769c2" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M 28,58 L 40,55 L 45,95 L 33,100 Z"
+                  fill="white" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+            <ellipse cx="70" cy="70" rx="32" ry="22"
+                     fill="#f5c89a" stroke="#000" stroke-width="3"/>
+            <path d="M 90,55 Q 105,50 108,62 Q 108,70 100,72 L 90,70 Z"
+                  fill="#f5c89a" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M 95,65 L 115,60 Q 118,66 115,70 L 95,73 Z"
+                  fill="#f5c89a" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M 95,72 L 117,70 Q 119,75 115,78 L 95,80 Z"
+                  fill="#f5c89a" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M 95,80 L 114,80 Q 116,84 112,86 L 95,87 Z"
+                  fill="#f5c89a" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+            <circle cx="100" cy="68" r="1.5" fill="#000"/>
+            <circle cx="102" cy="75" r="1.5" fill="#000"/>
+          </svg>
+
+          <!-- Briefcase as SVG -->
+          <svg id="briefcase" viewBox="0 0 90 60">
+            <!-- Case body -->
+            <rect x="5" y="15" width="80" height="40" rx="3"
+                  fill="#8b5a2b" stroke="#000" stroke-width="2"/>
+            <rect x="5" y="15" width="80" height="8"
+                  fill="#a07040" stroke="#000" stroke-width="2"/>
+            <!-- Handle -->
+            <path d="M 35,15 Q 35,2 45,2 Q 55,2 55,15"
+                  fill="none" stroke="#000" stroke-width="3"/>
+            <!-- Latches -->
+            <rect x="20" y="17" width="8" height="5" fill="#d4a810" stroke="#000" stroke-width="1"/>
+            <rect x="62" y="17" width="8" height="5" fill="#d4a810" stroke="#000" stroke-width="1"/>
+            <!-- $ emblem -->
+            <circle cx="45" cy="38" r="8" fill="#d4a810" stroke="#000" stroke-width="2"/>
+            <text x="45" y="43" font-family="Impact" font-size="14" fill="#3a2500" text-anchor="middle">$</text>
+          </svg>
+
+          <div id="deal-table"></div>
+
+          <div id="deal-banner">
+            <span id="deal-banner-text">THE DEAL</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal-backdrop">
+      <div id="modal">
+        <h2 id="modal-title">ROUND 1</h2>
+        <p id="modal-subtitle">Get ready...</p>
+        <p id="modal-detail" style="font-size:12px; color:#555; max-width: 360px;"></p>
+        <div id="modal-actions" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Fake statusbar -->
+  <div id="statusbar">
+    <div class="segment" id="status-left">Ready.</div>
+    <div class="segment" id="status-right" style="margin-left:auto;">HARDBALL v1.0</div>
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  // HARDBALL - game logic
+  // ============================================================
+
+  // ---- Question bank (matches promptukit `sections` schema) ----
+  // Embedded so the game works from file:// with no CORS headaches.
+  // You can later swap this out for `fetch("questions.json")` and
+  // point it at anything generated by `promptukit question-bank`.
+  const QUESTION_BANK = {
+    "title": "Hardball Default Bank",
+    "sections": [
+      {
+        "title": "General Knowledge",
+        "questions": [
+          {"prompt": "Which planet has the most moons?", "choices": ["Jupiter", "Saturn", "Uranus", "Neptune"], "answer": 1, "difficulty": "medium"},
+          {"prompt": "What is the capital of Australia?", "choices": ["Sydney", "Melbourne", "Canberra", "Perth"], "answer": 2, "difficulty": "easy"},
+          {"prompt": "How many bones are in the adult human body?", "choices": ["186", "206", "226", "246"], "answer": 1, "difficulty": "medium"},
+          {"prompt": "What is the largest ocean on Earth?", "choices": ["Atlantic", "Indian", "Arctic", "Pacific"], "answer": 3, "difficulty": "easy"},
+          {"prompt": "Which element has the chemical symbol 'Au'?", "choices": ["Silver", "Gold", "Aluminum", "Argon"], "answer": 1, "difficulty": "easy"}
+        ]
+      },
+      {
+        "title": "Science & Engineering",
+        "questions": [
+          {"prompt": "What does a Pareto frontier represent?", "choices": ["The worst solutions", "Solutions where no objective can improve without worsening another", "The average of all solutions", "Solutions that satisfy all constraints"], "answer": 1, "difficulty": "hard"},
+          {"prompt": "The unit of electrical resistance is the...", "choices": ["Volt", "Watt", "Ohm", "Ampere"], "answer": 2, "difficulty": "easy"},
+          {"prompt": "Approximately what percent of Earth's freshwater is in glaciers and ice caps?", "choices": ["10%", "30%", "50%", "68%"], "answer": 3, "difficulty": "hard"},
+          {"prompt": "What does 'riparian' refer to?", "choices": ["Desert ecosystems", "Areas along rivers and streams", "Deep ocean zones", "Mountain peaks"], "answer": 1, "difficulty": "medium"},
+          {"prompt": "Speed of light in a vacuum (m/s) is closest to...", "choices": ["3 × 10⁸", "3 × 10⁶", "3 × 10¹⁰", "3 × 10⁴"], "answer": 0, "difficulty": "medium"}
+        ]
+      },
+      {
+        "title": "Film, TV & Music",
+        "questions": [
+          {"prompt": "Who directed 'Spirited Away' and 'Ponyo'?", "choices": ["Isao Takahata", "Mamoru Hosoda", "Hayao Miyazaki", "Makoto Shinkai"], "answer": 2, "difficulty": "easy"},
+          {"prompt": "Bob Dylan's birth name is...", "choices": ["Robert Allen Zimmerman", "Robert James Dylan", "Robert Thomas Allen", "Robert Alan Wilson"], "answer": 0, "difficulty": "medium"},
+          {"prompt": "Which album contains 'Born to Run'?", "choices": ["Nebraska", "Born to Run", "The River", "Darkness on the Edge of Town"], "answer": 1, "difficulty": "easy"},
+          {"prompt": "Bad Bunny's summer 2022 album was titled...", "choices": ["YHLQMDLG", "Un Verano Sin Ti", "El Último Tour del Mundo", "X 100pre"], "answer": 1, "difficulty": "medium"},
+          {"prompt": "Which band did Bob Mould co-found in the 1980s?", "choices": ["Sugar", "Hüsker Dü", "The Replacements", "Dinosaur Jr."], "answer": 1, "difficulty": "hard"}
+        ]
+      },
+      {
+        "title": "Motorsport",
+        "questions": [
+          {"prompt": "How many laps is the Indianapolis 500?", "choices": ["100", "150", "200", "250"], "answer": 2, "difficulty": "easy"},
+          {"prompt": "Modern F1 cars use which engine formula?", "choices": ["1.6L V6 hybrid turbo", "3.0L V10", "2.4L V8", "1.5L I4 turbo"], "answer": 0, "difficulty": "medium"},
+          {"prompt": "IndyCar's crown-jewel oval race is held at...", "choices": ["Texas Motor Speedway", "Indianapolis Motor Speedway", "Iowa Speedway", "Gateway"], "answer": 1, "difficulty": "easy"},
+          {"prompt": "DRS in Formula 1 stands for...", "choices": ["Dynamic Racing System", "Drag Reduction System", "Downforce Recovery System", "Direct Response Steering"], "answer": 1, "difficulty": "medium"}
+        ]
+      }
+    ]
+  };
+
+  // ---- Normalize: flatten to a single question pool, promptukit-style tolerant ----
+  function flattenBank(bank) {
+    const pool = [];
+    const sections = bank.sections || bank.categories || [];
+    if (sections.length) {
+      for (const sec of sections) {
+        const title = sec.title || sec.name || sec.label || "Questions";
+        for (const q of (sec.questions || [])) {
+          pool.push(normalizeQuestion(q, title));
+        }
+      }
+    } else if (Array.isArray(bank.questions)) {
+      for (const q of bank.questions) {
+        pool.push(normalizeQuestion(q, q.category || "Questions"));
+      }
+    } else if (Array.isArray(bank)) {
+      for (const q of bank) pool.push(normalizeQuestion(q, q.category || "Questions"));
+    }
+    return pool;
+  }
+
+  function normalizeQuestion(q, category) {
+    return {
+      prompt: q.prompt || q.q || q.question || q.text || "???",
+      choices: q.choices || q.answers || [],
+      answer: q.answer ?? q.correct ?? q.correct_index ?? 0,
+      difficulty: q.difficulty || "medium",
+      category
+    };
+  }
+
+  const POOL = flattenBank(QUESTION_BANK);
+
+  // ---- Game state ----
+  const ROUND_TYPES = ["buzz", "simul", "strikes"];
+  const ROUND_LABELS = { buzz: "BUZZ-IN", simul: "SIMULTANEOUS", strikes: "THREE STRIKES" };
+
+  const state = {
+    totalRounds: 5,
+    round: 0,
+    roundType: "buzz",
+    question: null,
+    players: [
+      { id: 1, cash: 0, leverage: 0, strikes: 0, lockedOut: false, pickedChoice: null, answeredCorrect: false, strikesThisRound: 0 },
+      { id: 2, cash: 0, leverage: 0, strikes: 0, lockedOut: false, pickedChoice: null, answeredCorrect: false, strikesThisRound: 0 }
+    ],
+    phase: "idle",     // idle | question | deal | between
+    usedQuestions: new Set(),
+    roundStart: 0,
+    timerTotalMs: 12000,
+    timerTimeout: null,
+    firstCorrectPlayer: null
+  };
+
+  // ---- DOM refs ----
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    title: $("scene-title"),
+    game: $("scene-game"),
+    prompt: $("question-prompt"),
+    choices: $("choices"),
+    roundNum: $("round-num"),
+    roundTotal: $("round-total"),
+    roundType: $("round-type"),
+    sectionTitle: $("section-title"),
+    timerFill: $("timer-fill"),
+    modal: $("modal-backdrop"),
+    modalTitle: $("modal-title"),
+    modalSub: $("modal-subtitle"),
+    modalDetail: $("modal-detail"),
+    modalActions: $("modal-actions"),
+    handP1: $("hand-p1"),
+    handP2: $("hand-p2"),
+    briefcase: $("briefcase"),
+    dealBanner: $("deal-banner"),
+    dealBannerText: $("deal-banner-text"),
+    dealArea: $("deal-area"),
+    status: $("status-left"),
+    panelP1: $("panel-p1"),
+    panelP2: $("panel-p2")
+  };
+
+  // ============================================================
+  // SETUP
+  // ============================================================
+  $("btn-start").addEventListener("click", startGame);
+  $("btn-rounds-3").addEventListener("click", () => setRounds(3));
+  $("btn-rounds-5").addEventListener("click", () => setRounds(5));
+  $("btn-rounds-7").addEventListener("click", () => setRounds(7));
+
+  function setRounds(n) {
+    state.totalRounds = n;
+    $("round-count-label").textContent = `Playing best of ${n} rounds`;
+  }
+
+  function startGame() {
+    state.round = 0;
+    state.usedQuestions.clear();
+    for (const p of state.players) {
+      p.cash = 0; p.leverage = 0; p.strikes = 0; p.lockedOut = false;
+    }
+    updateHUD();
+    showScene("game");
+    nextRound();
+  }
+
+  function showScene(name) {
+    document.querySelectorAll(".scene").forEach(s => s.classList.remove("active"));
+    $("scene-" + name).classList.add("active");
+  }
+
+  // ============================================================
+  // ROUND FLOW
+  // ============================================================
+  function nextRound() {
+    if (state.round >= state.totalRounds) {
+      return endGame();
+    }
+    state.round++;
+    state.roundType = ROUND_TYPES[(state.round - 1) % ROUND_TYPES.length];
+    // Pick a question not yet used
+    let q = randomQuestion();
+    state.question = q;
+    // Reset per-round player state
+    for (const p of state.players) {
+      p.leverage = 0;
+      p.pickedChoice = null;
+      p.answeredCorrect = false;
+      p.lockedOut = false;
+      p.strikesThisRound = 0;
+    }
+    state.firstCorrectPlayer = null;
+
+    // Update UI labels
+    els.roundNum.textContent = state.round;
+    els.roundTotal.textContent = state.totalRounds;
+    els.roundType.textContent = ROUND_LABELS[state.roundType];
+    els.sectionTitle.textContent = q.category;
+    updateHUD();
+    resetDealScene();
+
+    showModal({
+      title: "ROUND " + state.round,
+      subtitle: ROUND_LABELS[state.roundType],
+      detail: roundTypeBlurb(state.roundType),
+      actions: [{ label: "▶ Begin", primary: true, onclick: () => { hideModal(); beginQuestion(); } }]
+    });
+  }
+
+  function roundTypeBlurb(t) {
+    if (t === "buzz") return "First correct answer wins ALL the leverage. Wrong answer = lockout.";
+    if (t === "simul") return "Lock in your answer secretly. Both reveal together. Correct answers split leverage.";
+    if (t === "strikes") return "Wrong answers add a strike; 3 strikes locks you out. A correct answer REVERSES one of your opponent's strikes.";
+    return "";
+  }
+
+  function randomQuestion() {
+    const available = POOL.map((_, i) => i).filter(i => !state.usedQuestions.has(i));
+    const pickFrom = available.length ? available : POOL.map((_, i) => i); // wrap around if we run out
+    if (!available.length) state.usedQuestions.clear();
+    const idx = pickFrom[Math.floor(Math.random() * pickFrom.length)];
+    state.usedQuestions.add(idx);
+    return POOL[idx];
+  }
+
+  function beginQuestion() {
+    state.phase = "question";
+    renderChoices();
+    els.prompt.textContent = state.question.prompt;
+    startTimer(state.timerTotalMs);
+    els.status.textContent = "Phase: answering...";
+  }
+
+  function renderChoices() {
+    els.choices.innerHTML = "";
+    const letters = ["A", "B", "C", "D", "E", "F"];
+    state.question.choices.forEach((ch, i) => {
+      const div = document.createElement("div");
+      div.className = "choice";
+      div.dataset.index = i;
+      div.innerHTML = `
+        <div class="letter">${letters[i]}</div>
+        <div class="text">${escapeHTML(ch)}</div>
+        <div class="press-indicators">
+          <div class="press-dot p1" data-player="1"></div>
+          <div class="press-dot p2" data-player="2"></div>
+        </div>
+      `;
+      els.choices.appendChild(div);
+    });
+  }
+
+  function escapeHTML(s) {
+    const d = document.createElement("div");
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  // ============================================================
+  // TIMER
+  // ============================================================
+  function startTimer(ms) {
+    state.roundStart = performance.now();
+    els.timerFill.style.transition = "none";
+    els.timerFill.style.width = "100%";
+    els.timerFill.classList.remove("warning");
+    // Force reflow
+    void els.timerFill.offsetWidth;
+    els.timerFill.style.transition = `width ${ms}ms linear`;
+    els.timerFill.style.width = "0%";
+
+    clearTimeout(state.timerTimeout);
+    state.timerTimeout = setTimeout(() => onTimeUp(), ms);
+
+    // Warning flash at 25%
+    setTimeout(() => els.timerFill.classList.add("warning"), ms * 0.75);
+  }
+
+  function stopTimer() {
+    clearTimeout(state.timerTimeout);
+    // Freeze the bar where it is by computing the current width
+    const rect = els.timerFill.getBoundingClientRect();
+    const parentRect = els.timerFill.parentElement.getBoundingClientRect();
+    const currentPct = (rect.width / parentRect.width) * 100;
+    els.timerFill.style.transition = "none";
+    els.timerFill.style.width = currentPct + "%";
+  }
+
+  function onTimeUp() {
+    if (state.phase !== "question") return;
+    // Resolve based on round type
+    resolveQuestion();
+  }
+
+  // ============================================================
+  // INPUT (keyboard + gamepad)
+  // ============================================================
+  // P1: 1/2/3/4 -> indices 0-3
+  // P2: 7/8/9/0 -> indices 0-3
+  const KEY_MAP = {
+    "1": { player: 1, idx: 0 }, "2": { player: 1, idx: 1 },
+    "3": { player: 1, idx: 2 }, "4": { player: 1, idx: 3 },
+    "7": { player: 2, idx: 0 }, "8": { player: 2, idx: 1 },
+    "9": { player: 2, idx: 2 }, "0": { player: 2, idx: 3 }
+  };
+
+  document.addEventListener("keydown", (e) => {
+    if (e.repeat) return;
+    const m = KEY_MAP[e.key];
+    if (m && state.phase === "question") {
+      handlePlayerInput(m.player, m.idx);
+    }
+    if (e.key === "Escape" && state.phase !== "idle") {
+      // Quick reset shortcut
+      showScene("title");
+      state.phase = "idle";
+    }
+  });
+
+  // Gamepad polling (face buttons A/B/X/Y -> choices 0/1/2/3)
+  function pollGamepads() {
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    for (let p = 0; p < Math.min(2, pads.length); p++) {
+      const pad = pads[p];
+      if (!pad) continue;
+      const player = p + 1;
+      const gpState = gamepadState[player] || (gamepadState[player] = [false, false, false, false]);
+      for (let b = 0; b < 4; b++) {
+        const pressed = pad.buttons[b] && pad.buttons[b].pressed;
+        if (pressed && !gpState[b]) {
+          if (state.phase === "question") handlePlayerInput(player, b);
+        }
+        gpState[b] = pressed;
+      }
+    }
+    requestAnimationFrame(pollGamepads);
+  }
+  const gamepadState = {};
+  requestAnimationFrame(pollGamepads);
+
+  function handlePlayerInput(playerNum, choiceIdx) {
+    if (choiceIdx >= state.question.choices.length) return;
+    const p = state.players[playerNum - 1];
+    if (p.lockedOut) return;
+
+    // Round-type-specific input handling
+    if (state.roundType === "buzz") {
+      // first correct answer takes it all; wrong answer locks you out
+      if (p.pickedChoice !== null) return; // one shot
+      p.pickedChoice = choiceIdx;
+      markPress(playerNum, choiceIdx);
+      const correct = choiceIdx === state.question.answer;
+      if (correct) {
+        state.firstCorrectPlayer = playerNum;
+        p.answeredCorrect = true;
+        // Buzz-in immediately resolves
+        stopTimer();
+        setTimeout(() => resolveQuestion(), 300);
+      } else {
+        // Wrong buzz = lockout for this question
+        p.lockedOut = true;
+        flashChoice(choiceIdx, "incorrect");
+        // Other player still has a chance
+        checkBothLockedOrAnswered();
+      }
+    } else if (state.roundType === "simul") {
+      // Can change pick until time runs out
+      p.pickedChoice = choiceIdx;
+      updateAllPressIndicators();
+      // If both players have locked in, speed up
+      if (state.players[0].pickedChoice !== null && state.players[1].pickedChoice !== null) {
+        stopTimer();
+        setTimeout(() => resolveQuestion(), 500);
+      }
+    } else if (state.roundType === "strikes") {
+      // Each wrong answer is a strike (this round). Right answer reverses opponent's strike (if any).
+      if (p.pickedChoice === choiceIdx) return; // avoid spam on same choice
+      p.pickedChoice = choiceIdx;
+      markPress(playerNum, choiceIdx);
+      const correct = choiceIdx === state.question.answer;
+      if (correct) {
+        p.answeredCorrect = true;
+        stopTimer();
+        setTimeout(() => resolveQuestion(), 400);
+      } else {
+        p.strikesThisRound++;
+        flashChoice(choiceIdx, "incorrect");
+        // Total strikes including this round
+        const totalStrikes = p.strikes + p.strikesThisRound;
+        if (totalStrikes >= 3) {
+          p.lockedOut = true;
+        }
+        updateHUD();
+        // Reset pick so they can try again (if not locked out)
+        setTimeout(() => { p.pickedChoice = null; clearPress(playerNum); }, 400);
+        checkBothLockedOrAnswered();
+      }
+    }
+  }
+
+  function checkBothLockedOrAnswered() {
+    const both = state.players.every(p => p.lockedOut || p.answeredCorrect);
+    if (both) {
+      stopTimer();
+      setTimeout(() => resolveQuestion(), 400);
+    }
+  }
+
+  function markPress(playerNum, idx) {
+    clearPress(playerNum);
+    const choice = els.choices.children[idx];
+    if (!choice) return;
+    const dot = choice.querySelector(`.press-dot.p${playerNum}`);
+    if (dot) dot.classList.add("shown");
+  }
+  function clearPress(playerNum) {
+    document.querySelectorAll(`.press-dot.p${playerNum}`).forEach(d => d.classList.remove("shown"));
+  }
+  function updateAllPressIndicators() {
+    clearPress(1); clearPress(2);
+    for (const p of state.players) {
+      if (p.pickedChoice !== null) markPress(p.id, p.pickedChoice);
+    }
+  }
+  function flashChoice(idx, cls) {
+    const el = els.choices.children[idx];
+    if (!el) return;
+    el.classList.add(cls);
+    setTimeout(() => el.classList.remove(cls), 600);
+  }
+
+  // ============================================================
+  // RESOLUTION
+  // ============================================================
+  function resolveQuestion() {
+    if (state.phase !== "question") return;
+    state.phase = "deal";
+    stopTimer();
+
+    const correct = state.question.answer;
+    // Show the correct answer
+    for (let i = 0; i < els.choices.children.length; i++) {
+      els.choices.children[i].classList.remove("incorrect");
+    }
+    els.choices.children[correct].classList.add("correct");
+
+    // Compute leverage per round type
+    if (state.roundType === "buzz") {
+      if (state.firstCorrectPlayer) {
+        state.players[state.firstCorrectPlayer - 1].leverage = 100;
+      }
+      // Locked-out players get -20 leverage (bad position at the table)
+      for (const p of state.players) {
+        if (p.lockedOut && !p.answeredCorrect) p.leverage = -20;
+      }
+    } else if (state.roundType === "simul") {
+      for (const p of state.players) {
+        if (p.pickedChoice === correct) {
+          p.answeredCorrect = true;
+          p.leverage = 60;
+        } else if (p.pickedChoice === null) {
+          p.leverage = -30; // no answer is worse than wrong
+        } else {
+          p.leverage = -10;
+        }
+      }
+    } else if (state.roundType === "strikes") {
+      // Commit strikesThisRound to total
+      for (const p of state.players) {
+        p.strikes = Math.min(3, p.strikes + p.strikesThisRound);
+      }
+      // Correct-answer bonus + reversal of opponent's strike
+      for (let i = 0; i < 2; i++) {
+        const p = state.players[i];
+        const opp = state.players[1 - i];
+        if (p.answeredCorrect) {
+          p.leverage = 80;
+          // Reverse one opponent strike
+          if (opp.strikes > 0) opp.strikes--;
+        } else if (p.lockedOut) {
+          p.leverage = -30;
+        } else {
+          p.leverage = -10;
+        }
+      }
+    }
+
+    updateHUD();
+    els.status.textContent = "Phase: negotiating...";
+
+    setTimeout(() => runDealPhase(), 900);
+  }
+
+  // ============================================================
+  // DEAL PHASE - the hand-shove animation
+  // ============================================================
+  function resetDealScene() {
+    // Return hands to starting positions, no transform overrides
+    els.handP1.style.left = "2%";
+    els.handP1.style.transform = "";
+    els.handP2.style.right = "2%";
+    els.handP2.style.transform = "scaleX(-1)";
+    els.briefcase.style.transform = "translateX(-50%)";
+    els.dealBanner.classList.remove("shown");
+  }
+
+  function runDealPhase() {
+    // Compute who "wins the deal" based on leverage
+    const p1 = state.players[0];
+    const p2 = state.players[1];
+    const diff = p1.leverage - p2.leverage;   // positive = p1 wins
+    const winner = diff > 0 ? 1 : (diff < 0 ? 2 : 0);
+    const absLev = Math.abs(diff);
+
+    // Map leverage diff to a "push distance". The hand of the LOSER gets
+    // shoved past center; the winner's hand stays near center with a
+    // dominant posture.
+    // absLev ranges 0 to ~130. We'll normalize to 0..1 for push intensity.
+    const intensity = Math.min(1, absLev / 100);
+
+    // Payout: each 10 leverage points in the winner's favor = $50.
+    // Losing player actually loses $20 if they had negative leverage.
+    const payout = winner ? Math.max(20, Math.round(absLev * 5)) : 0;
+    const penalty = winner ? 0 : 0; // handled below for draws
+
+    // ---- Animate hands ----
+    // We'll position by left/right percentages.
+    if (winner === 1) {
+      // P1 moves in strongly; P2 gets pushed back to their own side then "reaches in" at a weaker angle
+      els.handP1.style.left = (35 + 5 * (1 - intensity)) + "%";  // toward center
+      els.handP2.style.right = (30 + 20 * intensity) + "%";       // pushed back to right side
+      els.handP2.style.transform = `scaleX(-1) rotate(${10 * intensity}deg)`;
+      els.briefcase.style.transform = `translateX(calc(-50% + ${15 * intensity}%))`; // briefcase slides toward P1
+    } else if (winner === 2) {
+      els.handP2.style.right = (35 + 5 * (1 - intensity)) + "%";
+      els.handP1.style.left = (30 + 20 * intensity) + "%";
+      els.handP1.style.transform = `rotate(${-10 * intensity}deg)`;
+      els.briefcase.style.transform = `translateX(calc(-50% - ${15 * intensity}%))`;
+    } else {
+      // Draw: both hands meet in the middle equally
+      els.handP1.style.left = "38%";
+      els.handP2.style.right = "38%";
+    }
+
+    // ---- Banner + cash ----
+    setTimeout(() => {
+      let bannerText, color;
+      if (winner === 1) {
+        bannerText = `PLAYER 1 TAKES THE DEAL: +$${payout}`;
+        color = "var(--p1-color)";
+        state.players[0].cash += payout;
+      } else if (winner === 2) {
+        bannerText = `PLAYER 2 TAKES THE DEAL: +$${payout}`;
+        color = "var(--p2-color)";
+        state.players[1].cash += payout;
+      } else {
+        bannerText = "STALEMATE — NO DEAL";
+        color = "#555";
+      }
+      // Apply small penalty if either player had negative leverage (they overextended)
+      for (const p of state.players) {
+        if (p.leverage < 0 && winner !== p.id) {
+          const loss = Math.min(p.cash, 15);
+          p.cash -= loss;
+        }
+      }
+
+      els.dealBannerText.textContent = bannerText;
+      els.dealBanner.style.background =
+        `linear-gradient(to bottom, ${color}, #000)`;
+      els.dealBanner.style.color = "white";
+      els.dealBanner.classList.add("shown");
+
+      // Fly money effect
+      if (winner) flyMoney(winner, payout);
+
+      updateHUD();
+    }, 900);
+
+    // ---- Move on ----
+    setTimeout(() => {
+      state.phase = "between";
+      els.dealBanner.classList.remove("shown");
+      setTimeout(() => nextRound(), 900);
+    }, 3200);
+  }
+
+  function flyMoney(winner, amount) {
+    // Emit N little money bills from briefcase to winner's panel
+    const bills = Math.min(8, Math.max(3, Math.round(amount / 30)));
+    const briefRect = els.briefcase.getBoundingClientRect();
+    const targetRect = (winner === 1 ? els.panelP1 : els.panelP2).getBoundingClientRect();
+    const areaRect = els.dealArea.getBoundingClientRect();
+
+    for (let i = 0; i < bills; i++) {
+      const bill = document.createElement("div");
+      bill.className = "money-fly";
+      bill.textContent = "$";
+      const startX = briefRect.left - areaRect.left + 20;
+      const startY = briefRect.top - areaRect.top + 10;
+      bill.style.left = startX + "px";
+      bill.style.top = startY + "px";
+      els.dealArea.appendChild(bill);
+
+      // Target roughly the center of the cash counter
+      const endX = (winner === 1 ? 30 : areaRect.width - 70) + (Math.random() - 0.5) * 30;
+      const endY = -40 + Math.random() * 20;
+
+      bill.animate([
+        { left: startX + "px", top: startY + "px", opacity: 1, transform: "scale(1)" },
+        { opacity: 1, offset: 0.7 },
+        { left: endX + "px", top: endY + "px", opacity: 0, transform: "scale(0.5)" }
+      ], {
+        duration: 900 + Math.random() * 300,
+        delay: i * 80,
+        easing: "cubic-bezier(0.4, 0.0, 0.6, 1)",
+        fill: "forwards"
+      });
+      setTimeout(() => bill.remove(), 1500 + i * 80);
+    }
+  }
+
+  // ============================================================
+  // HUD
+  // ============================================================
+  function updateHUD() {
+    $("cash-p1").textContent = state.players[0].cash;
+    $("cash-p2").textContent = state.players[1].cash;
+    $("leverage-p1").textContent = state.players[0].leverage;
+    $("leverage-p2").textContent = state.players[1].leverage;
+    renderStrikes(1);
+    renderStrikes(2);
+    // Highlight who's "active" (has the most leverage this round)
+    els.panelP1.classList.toggle("active", state.players[0].leverage > state.players[1].leverage && state.players[0].leverage > 0);
+    els.panelP2.classList.toggle("active", state.players[1].leverage > state.players[0].leverage && state.players[1].leverage > 0);
+  }
+
+  function renderStrikes(pNum) {
+    const wrap = $("strikes-p" + pNum);
+    const tot = state.players[pNum - 1].strikes + (state.players[pNum - 1].strikesThisRound || 0);
+    const kids = wrap.querySelectorAll(".strike-x");
+    kids.forEach((k, i) => {
+      k.classList.toggle("active", i < Math.min(3, tot));
+    });
+  }
+
+  // ============================================================
+  // MODAL
+  // ============================================================
+  function showModal({ title, subtitle, detail, actions }) {
+    els.modalTitle.textContent = title;
+    els.modalSub.textContent = subtitle || "";
+    els.modalDetail.textContent = detail || "";
+    els.modalActions.innerHTML = "";
+    for (const a of (actions || [])) {
+      const b = document.createElement("button");
+      b.className = "luna-btn" + (a.primary ? " primary" : "");
+      b.textContent = a.label;
+      b.addEventListener("click", a.onclick);
+      els.modalActions.appendChild(b);
+    }
+    els.modal.classList.add("active");
+  }
+  function hideModal() { els.modal.classList.remove("active"); }
+
+  // ============================================================
+  // END OF GAME
+  // ============================================================
+  function endGame() {
+    state.phase = "idle";
+    const p1 = state.players[0].cash;
+    const p2 = state.players[1].cash;
+    const winner = p1 > p2 ? 1 : (p2 > p1 ? 2 : 0);
+    let title, sub;
+    if (winner === 0) {
+      title = "DRAW";
+      sub = `Both hustled their way to $${p1}.`;
+    } else {
+      title = `PLAYER ${winner} WINS`;
+      sub = `$${state.players[winner - 1].cash} vs $${state.players[1 - (winner - 1)].cash}`;
+    }
+    showModal({
+      title, subtitle: sub,
+      detail: "Rematch?",
+      actions: [
+        { label: "▶ Play Again", primary: true, onclick: () => { hideModal(); startGame(); } },
+        { label: "Main Menu", onclick: () => { hideModal(); showScene("title"); } }
+      ]
+    });
+  }
+
+</script>
+
+</body>
+</html>

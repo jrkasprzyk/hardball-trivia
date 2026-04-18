@@ -1,0 +1,44 @@
+{
+  "title": "Hardball Default Bank",
+  "sections": [
+    {
+      "title": "General Knowledge",
+      "questions": [
+        {"prompt": "Which planet has the most moons?", "choices": ["Jupiter", "Saturn", "Uranus", "Neptune"], "answer": 1, "difficulty": "medium"},
+        {"prompt": "What is the capital of Australia?", "choices": ["Sydney", "Melbourne", "Canberra", "Perth"], "answer": 2, "difficulty": "easy"},
+        {"prompt": "How many bones are in the adult human body?", "choices": ["186", "206", "226", "246"], "answer": 1, "difficulty": "medium"},
+        {"prompt": "What is the largest ocean on Earth?", "choices": ["Atlantic", "Indian", "Arctic", "Pacific"], "answer": 3, "difficulty": "easy"},
+        {"prompt": "Which element has the chemical symbol 'Au'?", "choices": ["Silver", "Gold", "Aluminum", "Argon"], "answer": 1, "difficulty": "easy"}
+      ]
+    },
+    {
+      "title": "Science & Engineering",
+      "questions": [
+        {"prompt": "What does a Pareto frontier represent?", "choices": ["The worst solutions", "Solutions where no objective can improve without worsening another", "The average of all solutions", "Solutions that satisfy all constraints"], "answer": 1, "difficulty": "hard"},
+        {"prompt": "The unit of electrical resistance is the...", "choices": ["Volt", "Watt", "Ohm", "Ampere"], "answer": 2, "difficulty": "easy"},
+        {"prompt": "Approximately what percent of Earth's freshwater is locked in glaciers and ice caps?", "choices": ["10%", "30%", "50%", "68%"], "answer": 3, "difficulty": "hard"},
+        {"prompt": "What does 'riparian' refer to?", "choices": ["Desert ecosystems", "Areas along rivers and streams", "Deep ocean zones", "Mountain peaks"], "answer": 1, "difficulty": "medium"},
+        {"prompt": "Speed of light in a vacuum (m/s) is closest to...", "choices": ["3 \u00d7 10\u2078", "3 \u00d7 10\u2076", "3 \u00d7 10\u00b9\u2070", "3 \u00d7 10\u2074"], "answer": 0, "difficulty": "medium"}
+      ]
+    },
+    {
+      "title": "Film, TV & Music",
+      "questions": [
+        {"prompt": "Who directed 'Spirited Away' and 'Ponyo'?", "choices": ["Isao Takahata", "Mamoru Hosoda", "Hayao Miyazaki", "Makoto Shinkai"], "answer": 2, "difficulty": "easy"},
+        {"prompt": "Bob Dylan's real name is...", "choices": ["Robert Allen Zimmerman", "Robert James Dylan", "Robert Thomas Allen", "Robert Alan Wilson"], "answer": 0, "difficulty": "medium"},
+        {"prompt": "Which album contains 'Born to Run'?", "choices": ["Nebraska", "Born to Run", "The River", "Darkness on the Edge of Town"], "answer": 1, "difficulty": "easy"},
+        {"prompt": "Bad Bunny's 2022 album was titled...", "choices": ["YHLQMDLG", "Un Verano Sin Ti", "El \u00daltimo Tour del Mundo", "X 100pre"], "answer": 1, "difficulty": "medium"},
+        {"prompt": "Which band did Bob Mould co-found in the 1980s?", "choices": ["Sugar", "H\u00fcsker D\u00fc", "The Replacements", "Dinosaur Jr."], "answer": 1, "difficulty": "hard"}
+      ]
+    },
+    {
+      "title": "Motorsport",
+      "questions": [
+        {"prompt": "How many laps is the Indianapolis 500?", "choices": ["100", "150", "200", "250"], "answer": 2, "difficulty": "easy"},
+        {"prompt": "F1 cars use which type of engine (as of recent seasons)?", "choices": ["1.6L V6 hybrid turbo", "3.0L V10", "2.4L V8", "1.5L I4 turbo"], "answer": 0, "difficulty": "medium"},
+        {"prompt": "The 'Monaco' of IndyCar \u2014 the crown jewel oval race \u2014 is held at...", "choices": ["Texas Motor Speedway", "Indianapolis Motor Speedway", "Iowa Speedway", "Gateway"], "answer": 1, "difficulty": "easy"},
+        {"prompt": "DRS in Formula 1 stands for...", "choices": ["Dynamic Racing System", "Drag Reduction System", "Downforce Recovery System", "Direct Response Steering"], "answer": 1, "difficulty": "medium"}
+      ]
+    }
+  ]
+}
