@@ -1461,10 +1461,10 @@
         checkBothLockedOrAnswered();
       }
     } else if (state.roundType === "simul") {
-      // Can change pick until time runs out
+      // Can change pick until time runs out; keep picks secret until reveal
       p.pickedChoice = choiceIdx;
-      updateAllPressIndicators();
-      // If both players have locked in, speed up
+      // Do NOT show press indicators here so picks remain hidden during simultaneous lock-in.
+      // If both players have locked in, speed up to reveal both at the same time.
       if (state.players[0].pickedChoice !== null && state.players[1].pickedChoice !== null) {
         stopTimer();
         setTimeout(() => resolveQuestion(), 500);
@@ -1540,6 +1540,11 @@
       els.choices.children[i].classList.remove("incorrect");
     }
     els.choices.children[correct].classList.add("correct");
+
+    // Reveal any secret picks (simultaneous rounds) by showing press indicators now
+    if (state.roundType === "simul") {
+      updateAllPressIndicators();
+    }
 
     // Compute leverage per round type
     if (state.roundType === "buzz") {
@@ -1796,6 +1801,79 @@
     });
   }
 
+  // Auto-test harness: if URL contains ?autoTest=simul this will simulate a simultaneous round
+  (function autoTestHarness() {
+    try {
+      const params = new URLSearchParams(location.search);
+      if (!params.has('autoTest')) return;
+      const test = params.get('autoTest');
+      console.log('AUTO TEST:', test);
+      const resultDiv = document.createElement('div');
+      resultDiv.style.position = 'fixed';
+      resultDiv.style.left = '8px';
+      resultDiv.style.bottom = '8px';
+      resultDiv.style.zIndex = 9999;
+      resultDiv.style.background = 'rgba(0,0,0,0.75)';
+      resultDiv.style.color = 'white';
+      resultDiv.style.padding = '8px 12px';
+      resultDiv.style.borderRadius = '6px';
+      resultDiv.style.fontWeight = 'bold';
+      resultDiv.textContent = 'AutoTest running...';
+      document.body.appendChild(resultDiv);
+
+      if (test === 'simul') {
+        // Force a single simultaneous round using the first question in the pool
+        state.totalRounds = 1;
+        state.round = 0;
+        state.question = POOL[0];
+        state.roundType = 'simul';
+        for (const p of state.players) {
+          p.pickedChoice = null; p.lockedOut = false; p.answeredCorrect = false; p.strikesThisRound = 0;
+        }
+        showScene('game');
+        // Start the question phase
+        beginQuestion();
+
+        // Simulate P1 then P2 picking different choices
+        setTimeout(() => {
+          handlePlayerInput(1, 0); // P1 picks choice 0
+          // Check press indicators remain hidden
+          const p1dot = document.querySelector('.press-dot.p1.shown');
+          const p2dot = document.querySelector('.press-dot.p2.shown');
+          const beforeHidden = !p1dot && !p2dot;
+          console.log('Before reveal, indicators shown?', !!p1dot, !!p2dot);
+          resultDiv.textContent = 'Before reveal hidden: ' + beforeHidden;
+
+          handlePlayerInput(2, 1); // P2 picks choice 1
+          const p1dot2 = document.querySelector('.press-dot.p1.shown');
+          const p2dot2 = document.querySelector('.press-dot.p2.shown');
+          const stillHidden = !p1dot2 && !p2dot2;
+          console.log('After both pick, indicators shown?', !!p1dot2, !!p2dot2);
+          resultDiv.textContent = 'Before reveal hidden: ' + (beforeHidden && stillHidden);
+        }, 200);
+
+        // After resolution, ensure indicators are revealed
+        setTimeout(() => {
+          // give resolution time to run (resolveQuestion schedules a reveal)
+          setTimeout(() => {
+            const p1Shown = !!document.querySelector('.press-dot.p1.shown');
+            const p2Shown = !!document.querySelector('.press-dot.p2.shown');
+            const pass = p1Shown && p2Shown;
+            console.log('After reveal, indicators shown?', p1Shown, p2Shown);
+            if (pass) {
+              resultDiv.style.background = 'green';
+              resultDiv.textContent = 'AUTO TEST PASS — simultaneous picks hidden until reveal';
+            } else {
+              resultDiv.style.background = '#800000';
+              resultDiv.textContent = 'AUTO TEST FAIL — picks visible prematurely';
+            }
+          }, 900);
+        }, 900);
+      }
+    } catch (err) {
+      console.error('AutoTest error', err);
+    }
+  })();
 </script>
 
 </body>
