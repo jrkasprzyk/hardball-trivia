@@ -137,3 +137,6 @@ dist
 
 # Local archive of superseded audio assets — keep on disk, out of git
 audio/**/_old/
+
+# Claude Code worktree scratch space
+.claude/worktrees/
