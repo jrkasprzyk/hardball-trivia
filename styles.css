@@ -546,7 +546,7 @@ body {
   background: linear-gradient(to bottom, #ffffff, #e4e0c5);
   border: 2px solid #5a5030;
   border-radius: 4px;
-  font-size: 17px;
+  font-size: 20px;
   font-family: Tahoma, sans-serif;
   box-shadow: 0 0 0 1px rgba(255,255,255,0.7) inset;
   transition: all 0.15s;
@@ -573,7 +573,7 @@ body {
 .choice.pos-b { grid-area: b; width: 95%; }
 .choice.pos-a { grid-area: a; width: 70%; }
 
-.choice .text { flex: 1; }
+.choice .text { flex: 1; font-weight: bold; }
 
 .choice .press-indicators {
   display: flex;
