@@ -674,11 +674,11 @@ function updateTitleFocus() {
   });
 }
 function handleTitleGamepadInput(player, buttonIndex) {
-  // D-pad: 14=left, 15=right; A (0) = confirm
-  if (buttonIndex === 14) {
+  // D-pad: 12=up, 13=down, 14=left, 15=right; A (0) = confirm
+  if (buttonIndex === 12 || buttonIndex === 14) {
     titleFocus = (titleFocus - 1 + TITLE_NAV_ELEMENTS.length) % TITLE_NAV_ELEMENTS.length;
     updateTitleFocus();
-  } else if (buttonIndex === 15) {
+  } else if (buttonIndex === 13 || buttonIndex === 15) {
     titleFocus = (titleFocus + 1) % TITLE_NAV_ELEMENTS.length;
     updateTitleFocus();
   } else if (buttonIndex === 0) {
@@ -742,13 +742,12 @@ function pollGamepads() {
       const pressed = pad.buttons[b] && pad.buttons[b].pressed;
       if (pressed && !prev[b]) {
         if (els.modal && els.modal.classList.contains('active')) {
-          // left/right to change modal focus
           const btns = els.modalActions ? els.modalActions.children : null;
           if (btns && btns.length) {
-            if (b === 14) {
+            if (b === 12 || b === 14) {
               modalFocus = (modalFocus - 1 + btns.length) % btns.length;
               updateModalFocus();
-            } else if (b === 15) {
+            } else if (b === 13 || b === 15) {
               modalFocus = (modalFocus + 1) % btns.length;
               updateModalFocus();
             }
@@ -758,6 +757,18 @@ function pollGamepads() {
         }
       }
       prev[b] = !!pressed;
+    }
+
+    // System buttons: 8=View (return to title), 9=Menu (mute) — only player 1 to avoid double-fire
+    if (p === 0) {
+      for (const b of [8, 9]) {
+        const pressed = pad.buttons[b] && pad.buttons[b].pressed;
+        if (pressed && !prev[b]) {
+          if (b === 9) HardballAudio.toggleMute();
+          if (b === 8 && state.phase !== "idle") returnToTitle();
+        }
+        prev[b] = !!pressed;
+      }
     }
   }
   requestAnimationFrame(pollGamepads);

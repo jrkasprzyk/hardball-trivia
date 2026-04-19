@@ -168,25 +168,30 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    padding: 40px;
-    gap: 5vw;
+    padding: clamp(12px, 2.5vw, 40px);
+    gap: clamp(16px, 3vw, 48px);
+    overflow: hidden;
   }
 
   #title-left {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
+    overflow: hidden;
   }
 
   #title-right {
     flex: 1.2;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
   }
 
   #scene-title h1 {
@@ -306,9 +311,9 @@
      ============================================================ */
   .luna-btn {
     display: inline-block;
-    padding: clamp(10px, 1.2vw, 22px) clamp(28px, 3vw, 56px);
+    padding: clamp(8px, 0.9vw, 16px) clamp(18px, 2vw, 36px);
     font-family: Tahoma, "Segoe UI", sans-serif;
-    font-size: clamp(14px, 1.8vw, 28px);
+    font-size: clamp(13px, 1.3vw, 20px);
     font-weight: bold;
     color: #1a1a1a;
     background: linear-gradient(to bottom,
