@@ -1,24 +1,25 @@
-## Hardball — The Trivia Negotiation (v0.1.1)
+## Hardball — The Trivia Negotiation (v0.1.2)
 
 Small local demo of the trivia-negotiation prototype. Two players compete
 across a sequence of rounds; each round type uses a different answering
 mechanic and awards "leverage" which determines who wins the briefcase.
 
-Quick highlights in v0.1.1
-- Three-Strikes rounds now run as a multi-question sequence until a player
-  accumulates 3 strikes (locks out). Correct answers in strikes rounds
-  remove one opponent strike.
-- Clarified leverage and payout behavior in UI and README.
+Quick highlights in v0.1.2
+- Title screen redesigned: split layout, larger panel text, visible focus ring, full controller navigation.
+- Splash screens between rounds: quote splash and quip recap before each new round.
+- Mute fix: mute state now correctly restores audio on unmute; controller keybinding hints visible on title.
+- Three-Strikes rounds run as a multi-question sequence until a player accumulates 3 strikes (locks out). Correct answers remove one opponent strike.
+- CSS extracted to `styles.css`; no build step required.
 
 ## Running the game
 
 No build step. Open `index.html` in a modern browser.
 
-Optional: serve the folder for easier testing and hot-swapping `questions.json`:
+For local dev, serve the folder so `questions.json` hot-swaps and relative paths resolve correctly:
 
 ```bash
-python -m http.server 8000
-# then visit http://localhost:8000
+python -m http.server 8067
+# then visit http://localhost:8067
 ```
 
 ## Audio
@@ -43,9 +44,18 @@ Provide OGG and/or MP3; the engine picks the first format the browser supports. 
 
 ## Controls
 
-- Player 1: keys `1 2 3 4` (A/B/C/D) or Gamepad 1 face buttons
-- Player 2: keys `7 8 9 0` (A/B/C/D) or Gamepad 2 face buttons
+**Keyboard**
+- Player 1: keys `1 2 3 4` (A/B/C/D)
+- Player 2: keys `7 8 9 0` (A/B/C/D)
 - `Escape`: return to main menu
+- `M`: toggle mute
+
+**Gamepad (Xbox-style)**
+- Face buttons (A/B/X/Y): answer selection / join / confirm
+- D-pad: navigate menus
+- `Y`: join game (title screen)
+- `≡ Menu`: toggle mute
+- `⧉ View`: return to main menu
 
 ## Round types (summary)
 
@@ -74,14 +84,9 @@ Expected fields: `prompt` (or `q`/`question`), `choices` (array), `answer` (zero
 ## Dev & testing tips
 
 - Auto-test harness: open `index.html?autoTest=simul` to run a quick simultaneous-round smoke test.
-- To iterate on questions while serving: run `python -m http.server` and edit `questions.json` or host your JSON bank.
+- To iterate on questions while serving: run `python -m http.server 8067` and edit `questions.json` or host your JSON bank.
 
 ## Next steps (ideas)
 
 - Add clearer in-game help modal explaining leverage numbers and penalties.
 - Implement persistent high scores and seeded match replays.
-- Small accessibility improvements: focus outlines, ARIA labels for dynamic elements.
-
----
-
-If you want, I can also add a short in-game HELP modal and update the pause/menu text. This README edit completes the v0.1.1 doc updates.
