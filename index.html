@@ -165,15 +165,33 @@
      TITLE SCREEN
      ============================================================ */
   #scene-title {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    gap: 5vw;
+  }
+
+  #title-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 20px;
+  }
+
+  #title-right {
+    flex: 1.2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
   #scene-title h1 {
     font-family: "Impact", "Arial Black", Tahoma, sans-serif;
-    font-size: clamp(48px, 9vw, 120px);
+    font-size: clamp(48px, 9vw, 140px);
     margin: 0;
     color: var(--gold);
     text-shadow:
@@ -188,8 +206,8 @@
   #scene-title h2 {
     font-family: Tahoma, sans-serif;
     color: white;
-    font-size: clamp(14px, 2vw, 22px);
-    margin: 4px 0 28px 0;
+    font-size: clamp(14px, 2vw, 28px);
+    margin: 4px 0 0 0;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     font-style: italic;
   }
@@ -199,8 +217,9 @@
       var(--luna-silver-top), var(--luna-silver-mid) 60%, var(--luna-silver-bot));
     border: 2px solid #3a3a3a;
     border-radius: 6px;
-    padding: 18px 28px;
-    max-width: 560px;
+    padding: clamp(16px, 2vw, 36px) clamp(20px, 2.5vw, 48px);
+    width: 100%;
+    box-sizing: border-box;
     box-shadow:
       0 0 0 1px rgba(255,255,255,0.6) inset,
       0 6px 20px rgba(0,0,0,0.5);
@@ -208,7 +227,7 @@
   }
   .title-panel p {
     margin: 4px 0;
-    font-size: 13px;
+    font-size: clamp(13px, 1.4vw, 22px);
     color: #222;
   }
   .title-panel .kbd-row {
@@ -233,7 +252,7 @@
   }
   .kbd-block h3 {
     margin: 0 0 6px 0;
-    font-size: 13px;
+    font-size: clamp(13px, 1.4vw, 22px);
   }
   .kbd-block.p1 h3 { color: var(--p1-color-dk); }
   .kbd-block.p2 h3 { color: var(--p2-color-dk); }
@@ -276,8 +295,10 @@
   .gp-btn.b { background: #e53935; }
   .gp-label, .gp-legend-text { margin-right: 12px; font-size: 12px; color: #333; margin-left: 6px; }
   .luna-btn.focused {
-    box-shadow: 0 0 0 3px rgba(255,255,255,0.12), 0 0 0 2px rgba(255,215,0,0.15) inset;
-    transform: translateY(-1px);
+    box-shadow: 0 0 0 4px #ffd700, 0 0 18px rgba(255,215,0,0.75);
+    background: linear-gradient(to bottom, #fff9c6, #f4d060 50%, #d69d20 51%, #e8c055);
+    border-color: #704f00;
+    transform: translateY(-2px);
   }
 
   /* ============================================================
@@ -893,59 +914,63 @@
 
     <!-- TITLE SCENE -->
     <div class="scene active" id="scene-title">
-      <h1>HARDBALL</h1>
-      <h2>&mdash; The Trivia Negotiation &mdash;</h2>
+      <div id="title-left">
+        <h1>HARDBALL</h1>
+        <h2>&mdash; The Trivia Negotiation &mdash;</h2>
+      </div>
 
-      <div class="title-panel">
-        <p style="font-weight:bold;">Two players. One question. The correct answer earns leverage. The leverage wins the deal.</p>
-        <div class="kbd-row">
-          <div class="kbd-block p1">
-            <h3>◆ PLAYER 1</h3>
-            <div>Answer: <span class="kbd">1</span><span class="kbd">2</span><span class="kbd">3</span><span class="kbd">4</span></div>
-            <div class="gp-row" style="margin-top:8px; font-size:12px;">
-              <span class="gp-btn x">X</span><span class="gp-label">→ A</span>
-              <span class="gp-btn y">Y</span><span class="gp-label">→ B</span>
-              <span class="gp-btn a">A</span><span class="gp-label">→ C</span>
-              <span class="gp-btn b">B</span><span class="gp-label">→ D</span>
+      <div id="title-right">
+        <div class="title-panel">
+          <p style="font-weight:bold;">Two players. One question. The correct answer earns leverage. The leverage wins the deal.</p>
+          <div class="kbd-row">
+            <div class="kbd-block p1">
+              <h3>◆ PLAYER 1</h3>
+              <div>Answer: <span class="kbd">1</span><span class="kbd">2</span><span class="kbd">3</span><span class="kbd">4</span></div>
+              <div class="gp-row" style="margin-top:8px;">
+                <span class="gp-btn x">X</span><span class="gp-label">→ A</span>
+                <span class="gp-btn y">Y</span><span class="gp-label">→ B</span>
+                <span class="gp-btn a">A</span><span class="gp-label">→ C</span>
+                <span class="gp-btn b">B</span><span class="gp-label">→ D</span>
+              </div>
+            </div>
+            <div class="kbd-block p2">
+              <h3>◆ PLAYER 2</h3>
+              <div>Answer: <span class="kbd">7</span><span class="kbd">8</span><span class="kbd">9</span><span class="kbd">0</span></div>
+              <div class="gp-row" style="margin-top:8px;">
+                <span class="gp-btn x">X</span><span class="gp-label">→ A</span>
+                <span class="gp-btn y">Y</span><span class="gp-label">→ B</span>
+                <span class="gp-btn a">A</span><span class="gp-label">→ C</span>
+                <span class="gp-btn b">B</span><span class="gp-label">→ D</span>
+              </div>
             </div>
           </div>
-          <div class="kbd-block p2">
-            <h3>◆ PLAYER 2</h3>
-            <div>Answer: <span class="kbd">7</span><span class="kbd">8</span><span class="kbd">9</span><span class="kbd">0</span></div>
-            <div class="gp-row" style="margin-top:8px; font-size:12px;">
-              <span class="gp-btn x">X</span><span class="gp-label">→ A</span>
-              <span class="gp-btn y">Y</span><span class="gp-label">→ B</span>
-              <span class="gp-btn a">A</span><span class="gp-label">→ C</span>
-              <span class="gp-btn b">B</span><span class="gp-label">→ D</span>
-            </div>
-          </div>
+          <p style="color:#444;">
+            <b>Buzz-In:</b> first correct answer earns leverage. Wrong buzz locks you out.<br>
+            <b>Simultaneous:</b> lock in your answer in secret. Correct answers gain leverage.<br>
+            <b>Three Strikes:</b> wrong = strike. Correct answers remove one of your strikes.
+          </p>
+          <p style="color:#444;">
+            <b>Win the round:</b> advance your hand across the table to grab the briefcase (+100 leverage), or pin your opponent against the back wall (-60).<br>
+            <b>Win the game:</b> most <i>cash</i> wins. Briefcase values escalate each round — the final round is worth double.
+          </p>
         </div>
-        <p style="font-size:11.5px; color:#444;">
-          <b>Buzz-In:</b> first correct answer earns leverage. Wrong buzz locks you out.<br>
-          <b>Simultaneous:</b> lock in your answer in secret. Correct answers gain leverage.<br>
-          <b>Three Strikes:</b> wrong = strike. Correct answers remove one of your strikes.
-        </p>
-        <p style="font-size:11.5px; color:#444;">
-          <b>Win the round:</b> advance your hand across the table to grab the briefcase (+100 leverage), or pin your opponent against the back wall (-60).<br>
-          <b>Win the game:</b> most <i>cash</i> wins. Briefcase values escalate each round — the final round is worth double.
-        </p>
-      </div>
 
-      <div>
-        <button class="luna-btn primary" id="btn-start">▶  Start Game</button>
-        <button class="luna-btn" id="btn-rounds-3">3 Rounds</button>
-        <button class="luna-btn" id="btn-rounds-5">5 Rounds</button>
-        <button class="luna-btn" id="btn-rounds-7">7 Rounds</button>
-        <button class="luna-btn" id="btn-help">Help</button>
-        <button class="luna-btn" id="btn-reload-bank">&#8635; Reload Bank</button>
+        <div>
+          <button class="luna-btn primary" id="btn-start">▶  Start Game</button>
+          <button class="luna-btn" id="btn-rounds-3">3 Rounds</button>
+          <button class="luna-btn" id="btn-rounds-5">5 Rounds</button>
+          <button class="luna-btn" id="btn-rounds-7">7 Rounds</button>
+          <button class="luna-btn" id="btn-help">Help</button>
+          <button class="luna-btn" id="btn-reload-bank">&#8635; Reload Bank</button>
+        </div>
+        <div style="margin-top:8px;">
+          <button class="luna-btn" id="join-p1">P1: CPU (Press Y to join)</button>
+          <button class="luna-btn" id="join-p2">P2: CPU (Press Y to join)</button>
+        </div>
+        <p style="color:white; font-size:clamp(11px,1.2vw,18px); margin-top:8px; text-shadow:1px 1px 2px #000;">
+          <span id="round-count-label">Playing best of 5 rounds</span>
+        </p>
       </div>
-      <div style="margin-top:8px;">
-        <button class="luna-btn" id="join-p1">P1: CPU (Press Y to join)</button>
-        <button class="luna-btn" id="join-p2">P2: CPU (Press Y to join)</button>
-      </div>
-      <p style="color:white; font-size:11px; margin-top:12px; text-shadow:1px 1px 2px #000;">
-        <span id="round-count-label">Playing best of 5 rounds</span>
-      </p>
     </div>
 
     <!-- GAME SCENE -->

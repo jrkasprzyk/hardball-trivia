@@ -665,7 +665,7 @@ const GAMEPAD_BUTTON_TO_CHOICE = [3, 2, 1, 0]; // gamepad button idx -> choice i
 const gamepadPrev = {};
 
 // Title screen navigation elements
-const TITLE_NAV_ELEMENTS = [ $("btn-start"), $("btn-rounds-3"), $("btn-rounds-5"), $("btn-rounds-7") ];
+const TITLE_NAV_ELEMENTS = [ $("btn-start"), $("btn-rounds-3"), $("btn-rounds-5"), $("btn-rounds-7"), $("btn-help"), $("btn-reload-bank") ];
 let titleFocus = 0;
 function updateTitleFocus() {
   TITLE_NAV_ELEMENTS.forEach((el, i) => {
