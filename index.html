@@ -285,9 +285,9 @@
      ============================================================ */
   .luna-btn {
     display: inline-block;
-    padding: 10px 28px;
+    padding: clamp(10px, 1.2vw, 22px) clamp(28px, 3vw, 56px);
     font-family: Tahoma, "Segoe UI", sans-serif;
-    font-size: 14px;
+    font-size: clamp(14px, 1.8vw, 28px);
     font-weight: bold;
     color: #1a1a1a;
     background: linear-gradient(to bottom,
@@ -693,7 +693,7 @@
   #quip-splash.shown { opacity: 1; pointer-events: auto; }
   #quip-splash-header {
     font-family: "Impact", Tahoma, sans-serif;
-    font-size: clamp(22px, 3.5vw, 44px);
+    font-size: clamp(36px, 5vw, 84px);
     letter-spacing: 4px;
     color: var(--gold);
     text-shadow: 0 0 16px rgba(255,200,0,0.6);
@@ -702,7 +702,7 @@
   #quip-splash-text {
     font-family: Georgia, serif;
     font-style: italic;
-    font-size: clamp(26px, 4vw, 56px);
+    font-size: clamp(40px, 5.5vw, 96px);
     color: #f4f0e0;
     text-align: center;
     max-width: 85%;
@@ -729,7 +729,7 @@
   #quote-text {
     font-family: Georgia, serif;
     font-style: italic;
-    font-size: clamp(22px, 3.5vw, 48px);
+    font-size: clamp(36px, 5vw, 88px);
     color: #f4f0e0;
     text-align: center;
     max-width: 80%;
@@ -738,7 +738,7 @@
   }
   #quote-attr {
     font-family: "Impact", Tahoma, sans-serif;
-    font-size: clamp(14px, 2vw, 26px);
+    font-size: clamp(24px, 3vw, 52px);
     letter-spacing: 2px;
     color: var(--gold);
     text-shadow: 0 0 12px rgba(255,200,0,0.5);
@@ -749,7 +749,7 @@
     gap: 20px;
     margin-top: 16px;
     font-family: Tahoma, sans-serif;
-    font-size: clamp(12px, 1.6vw, 18px);
+    font-size: clamp(20px, 2.5vw, 36px);
     color: #aaa;
     letter-spacing: 1px;
   }
@@ -816,20 +816,21 @@
     background: linear-gradient(to bottom, var(--luna-silver-top), var(--luna-silver-mid));
     border: 2px solid #404040;
     border-radius: 8px;
-    padding: 24px 36px;
-    min-width: 320px;
+    padding: clamp(24px, 3vw, 56px) clamp(36px, 5vw, 96px);
+    min-width: clamp(320px, 50vw, 900px);
+    max-width: 80vw;
     text-align: center;
     box-shadow: 0 0 0 1px rgba(255,255,255,0.6) inset, 0 10px 40px rgba(0,0,0,0.6);
   }
   #modal h2 {
     margin: 0 0 8px 0;
     font-family: "Impact", Tahoma, sans-serif;
-    font-size: 32px;
+    font-size: clamp(32px, 4vw, 72px);
     color: var(--luna-blue-bot);
     text-shadow: 2px 2px 0 rgba(255,255,255,0.5);
     letter-spacing: 2px;
   }
-  #modal p { margin: 6px 0; font-size: 13px; }
+  #modal p { margin: 6px 0; font-size: clamp(14px, 2vw, 32px); }
 
   /* ============================================================
      STATUSBAR
@@ -1095,7 +1096,7 @@
       <div id="modal">
         <h2 id="modal-title">ROUND 1</h2>
         <p id="modal-subtitle">Get ready...</p>
-        <p id="modal-detail" style="font-size:12px; color:#555; max-width: 360px;"></p>
+        <p id="modal-detail" style="color:#555; max-width: 70vw;"></p>
         <div id="modal-actions" style="margin-top:12px;"></div>
       </div>
     </div>
