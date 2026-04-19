@@ -21,6 +21,26 @@ python -m http.server 8000
 # then visit http://localhost:8000
 ```
 
+## Audio
+
+Background music and sound effects play automatically once you interact with the page (browser autoplay policy).
+
+**Asset layout** — create an `audio/` folder at the project root:
+
+```
+audio/
+  music/
+    title.ogg     title.mp3      ← title-screen loop
+    gameplay.ogg  gameplay.mp3   ← in-game loop
+    endgame.ogg   endgame.mp3    ← post-game screen
+  sfx/
+    click.ogg     click.mp3      ← answer selection
+```
+
+Provide OGG and/or MP3; the engine picks the first format the browser supports. WAV sources can be converted with ffmpeg (e.g., `ffmpeg -i src.wav -q:a 4 output.ogg`).
+
+**Mute:** press `M` or click the `♪` icon in the statusbar. Mute state persists across sessions.
+
 ## Controls
 
 - Player 1: keys `1 2 3 4` (A/B/C/D) or Gamepad 1 face buttons
