@@ -116,6 +116,11 @@
     for (const name of Object.keys(sfxPools)) {
       for (const a of sfxPools[name]) a.volume = sv;
     }
+    // If unmuting, resume the active slot in case the browser paused it
+    if (!_muted && _unlocked) {
+      const active = slots[activeSlot];
+      if (active.src && active.paused) active.play().catch(() => {});
+    }
     // Update mute icon
     const icon = document.getElementById('audio-mute-toggle');
     if (icon) icon.classList.toggle('muted', _muted);
