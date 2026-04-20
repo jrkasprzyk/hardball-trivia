@@ -216,9 +216,7 @@ const els = {
   quipSplashText: $("quip-splash-text"),
   quoteSplash: $("quote-splash"),
   quoteText: $("quote-text"),
-  quoteAttr: $("quote-attr"),
-  readyP1: $("ready-p1"),
-  readyP2: $("ready-p2")
+  quoteAttr: $("quote-attr")
 };
 
 // Fetch+parse a single bank URL. Returns the parsed object, or throws.
@@ -459,7 +457,8 @@ function nextRound() {
       title: "ROUND " + state.round,
       subtitle: ROUND_LABELS[state.roundType] + "  —  BRIEFCASE: $" + state.briefcaseValue,
       detail: roundTypeBlurb(state.roundType),
-      actions: [{ label: "▶ Begin", primary: true, onclick: () => { hideModal(); beginQuestion(); } }]
+      requireBothPlayers: true,
+      actions: [{ onclick: () => { beginQuestion(); } }]
     });
   });
 }
@@ -651,9 +650,9 @@ const KEY_MAP = {
 document.addEventListener("keydown", (e) => {
   if (e.repeat) return;
   const m = KEY_MAP[e.key];
-  if (m && state.phase === "quote") {
+  if (m && modalReadyCallback) {
     if (state.players[m.player - 1].isHuman) {
-      markQuoteReady(m.player - 1);
+      markModalReady(m.player - 1);
     }
   }
   if (m && state.phase === "question") {
@@ -739,11 +738,16 @@ function pollGamepads() {
       if (pressed && !prev[b]) {
         // Modal gets priority when active
         if (els.modal && els.modal.classList.contains('active')) {
-          // A (0) confirms currently focused modal action
           if (b === 0) {
-            const btns = els.modalActions.querySelectorAll('button');
-            const btn = btns[modalFocus] || btns[0];
-            if (btn) btn.click();
+            if (modalReadyCallback) {
+              if (state.players[player - 1] && state.players[player - 1].isHuman) {
+                markModalReady(player - 1);
+              }
+            } else {
+              const btns = els.modalActions.querySelectorAll('button');
+              const btn = btns[modalFocus] || btns[0];
+              if (btn) btn.click();
+            }
           }
         } else if (document.querySelector("#scene-title").classList.contains("active")) {
             // On the title screen: pressing Y (button 3) joins that controller's player slot
@@ -752,10 +756,6 @@ function pollGamepads() {
             } else {
               handleTitleGamepadInput(player, b);
             }
-        } else if (state.phase === "quote") {
-          if (b === 0 && state.players[player - 1] && state.players[player - 1].isHuman) {
-            markQuoteReady(player - 1);
-          }
         } else if (state.phase === "question") {
           // Only accept gamepad input if this player slot is human
           if (state.players[player - 1] && state.players[player - 1].isHuman) {
@@ -1177,8 +1177,6 @@ const AUTHOR_QUOTES = [
   { text: "Man is condemned to be free.", author: "Jean-Paul Sartre" },
 ];
 
-let quoteReadyFlags = [false, false];
-let quoteReadyCallback = null;
 let usedQuoteIndices = [];
 
 function pickRandomQuote() {
@@ -1192,38 +1190,13 @@ function pickRandomQuote() {
 
 function showQuoteSplash(quote, onDone) {
   if (!els.quoteSplash) { if (onDone) onDone(); return; }
-  quoteReadyFlags = [false, false];
-  quoteReadyCallback = onDone;
   els.quoteText.textContent = "\u201C" + quote.text + "\u201D";
   els.quoteAttr.textContent = "\u2014 " + quote.author;
-  if (els.readyP1) els.readyP1.classList.remove("ready");
-  if (els.readyP2) els.readyP2.classList.remove("ready");
-  // Auto-ready CPU players
-  for (let i = 0; i < state.players.length; i++) {
-    if (!state.players[i].isHuman) markQuoteReady(i, false);
-  }
   els.quoteSplash.classList.add("shown");
-  state.phase = "quote";
-  // If all players are CPU, close immediately after a brief display
-  checkAllQuoteReady();
-}
-
-function markQuoteReady(playerIdx, checkDone = true) {
-  if (quoteReadyFlags[playerIdx]) return;
-  quoteReadyFlags[playerIdx] = true;
-  if (playerIdx === 0 && els.readyP1) els.readyP1.classList.add("ready");
-  if (playerIdx === 1 && els.readyP2) els.readyP2.classList.add("ready");
-  if (checkDone) checkAllQuoteReady();
-}
-
-function checkAllQuoteReady() {
-  const allReady = state.players.every((p, i) => !p.isHuman || quoteReadyFlags[i]);
-  if (!allReady) return;
-  if (!quoteReadyCallback) return;
-  els.quoteSplash.classList.remove("shown");
-  const cb = quoteReadyCallback;
-  quoteReadyCallback = null;
-  setTimeout(() => { cb(); }, 500);
+  setTimeout(() => {
+    els.quoteSplash.classList.remove("shown");
+    setTimeout(() => { if (onDone) onDone(); }, 500);
+  }, 2500);
 }
 
 function resetDealScene() {
@@ -1454,18 +1427,50 @@ function renderStrikes(pNum) {
 // ============================================================
 // MODAL
 // ============================================================
-function showModal({ title, subtitle, detail, actions }) {
+let modalReadyFlags = [false, false];
+let modalReadyCallback = null;
+
+function markModalReady(playerIdx) {
+  if (modalReadyFlags[playerIdx]) return;
+  modalReadyFlags[playerIdx] = true;
+  const dot = document.getElementById(`modal-ready-p${playerIdx + 1}`);
+  if (dot) dot.classList.add("ready");
+  const allReady = state.players.every((p, i) => !p.isHuman || modalReadyFlags[i]);
+  if (!allReady) return;
+  if (!modalReadyCallback) return;
+  const cb = modalReadyCallback;
+  modalReadyCallback = null;
+  hideModal();
+  cb();
+}
+
+function showModal({ title, subtitle, detail, actions, requireBothPlayers }) {
   els.modalTitle.textContent = title;
   els.modalSub.textContent = subtitle || "";
   els.modalDetail.textContent = detail || "";
   els.modalActions.innerHTML = "";
-  for (const a of (actions || [])) {
-    const b = document.createElement("button");
-    b.className = "luna-btn" + (a.primary ? " primary" : "");
-    b.textContent = a.label;
-    b.addEventListener("click", a.onclick);
-    els.modalActions.appendChild(b);
+  modalReadyCallback = null;
+
+  if (requireBothPlayers) {
+    modalReadyFlags = [false, false];
+    modalReadyCallback = actions[0].onclick;
+    const readyDiv = document.createElement("div");
+    readyDiv.className = "modal-both-ready";
+    readyDiv.innerHTML = `<div class="quote-ready-dot p1" id="modal-ready-p1"></div><span>PRESS A TO BEGIN</span><div class="quote-ready-dot p2" id="modal-ready-p2"></div>`;
+    els.modalActions.appendChild(readyDiv);
+    for (let i = 0; i < state.players.length; i++) {
+      if (!state.players[i].isHuman) markModalReady(i);
+    }
+  } else {
+    for (const a of (actions || [])) {
+      const b = document.createElement("button");
+      b.className = "luna-btn" + (a.primary ? " primary" : "");
+      b.textContent = a.label;
+      b.addEventListener("click", a.onclick);
+      els.modalActions.appendChild(b);
+    }
   }
+
   // Set modal focus to the first action and show it
   modalFocus = 0;
   updateModalFocus();
