@@ -73,11 +73,21 @@ Rounds cycle in order: Buzz-In → Simultaneous → Three Strikes.
 
 ## Using your own question banks
 
-The game accepts banks in the promptukit-friendly schema. By default a small
-embedded bank is used (so `index.html` works over `file://`). To swap banks:
+The game accepts banks in the promptukit-friendly schema. Banks are declared in
+the `QUESTION_BANKS` array near the top of `js/game.js`. Each entry has a CDN
+`url`, a `versionConst` pointing to a version constant, and a `localFallbacks`
+list of filenames to try if the CDN is unreachable.
 
-- Paste a JSON bank into the `QUESTION_BANK` object in `index.html`.
-- Or serve a JSON file and modify the remote loading URL in `game.js`.
+The bank button on the title screen cycles through available banks and displays
+the version that actually loaded (`v0.1.550`, `offline copy`, or `built-in`).
+
+**To add a new bank:**
+1. Add a version constant: `const MY_BANK_VERSION = "v1.0.0";`
+2. Add it to the `VERSIONS` lookup: `const VERSIONS = { ..., MY_BANK_VERSION };`
+3. Add an entry to `QUESTION_BANKS` with `versionConst: "MY_BANK_VERSION"` and the CDN url.
+
+**To bump a version:** run `node dev/bump-version.js` for an interactive prompt
+that lists all version constants and which banks use each one.
 
 Expected fields: `prompt` (or `q`/`question`), `choices` (array), `answer` (zero-index), `difficulty` (optional), `category` (optional).
 
