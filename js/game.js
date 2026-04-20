@@ -57,8 +57,21 @@ const EMBEDDED_QUESTION_BANK = {
 // Pin the CDN to a version tag for real gameplay so content is reproducible.
 // Dev (unpinned, tracks main):
 //   https://cdn.jsdelivr.net/gh/jrkasprzyk/promptukit@main/promptukit/data/question_banks/jrb_industries_trivia.json
-const REMOTE_BANK_VERSION = "v0.1.300";
-const REMOTE_BANK_URL = `https://cdn.jsdelivr.net/gh/jrkasprzyk/promptukit@${REMOTE_BANK_VERSION}/promptukit/data/question_banks/jrb_industries_trivia.json`;
+const REMOTE_BANK_VERSION = "v0.1.400";
+const QUESTION_BANKS = [
+  {
+    key: "jrb",
+    label: "JRB Industries Trivia",
+    url: `https://cdn.jsdelivr.net/gh/jrkasprzyk/promptukit@${REMOTE_BANK_VERSION}/promptukit/data/question_banks/jrb_industries_trivia.json`
+  },
+  {
+    key: "dev",
+    label: "Dev Unaware Challenge",
+    url: `https://cdn.jsdelivr.net/gh/jrkasprzyk/promptukit@${REMOTE_BANK_VERSION}/promptukit/data/question_banks/dev-unaware-challenge.json`
+  }
+];
+let selectedBankIndex = 0;
+const REMOTE_BANK_URL = QUESTION_BANKS[0].url;
 const LOCAL_FALLBACK_URLS = [
   "jrb_industries_trivia.v.0.1.281.json",
   "questions.json"
@@ -230,9 +243,15 @@ async function fetchBank(url) {
 
 // Walk the CDN → local-files → embedded chain, stopping at the first source
 // that yields a non-empty question pool.
+function updateBankButton() {
+  const btn = $("btn-bank");
+  if (btn) btn.textContent = `\u{1F4DA} ${QUESTION_BANKS[selectedBankIndex].label}`;
+}
+
 function tryLoadRemoteBank() {
+  const bank = QUESTION_BANKS[selectedBankIndex];
   const sources = [
-    { url: REMOTE_BANK_URL, kind: 'cdn', label: `cdn ${REMOTE_BANK_VERSION}` },
+    { url: bank.url, kind: 'cdn', label: `cdn ${REMOTE_BANK_VERSION}` },
     ...LOCAL_FALLBACK_URLS.map(url => ({ url, kind: 'local', label: `local ${url}` }))
   ];
 
@@ -269,12 +288,19 @@ function tryLoadRemoteBank() {
   })();
 }
 tryLoadRemoteBank();
+updateBankButton();
 
 // ============================================================
 // SETUP
 // ============================================================
 $("btn-start").addEventListener("click", startGame);
 $("btn-reload-bank").addEventListener("click", tryLoadRemoteBank);
+$("btn-bank").addEventListener("click", () => {
+  HardballAudio.playSFX("click");
+  selectedBankIndex = (selectedBankIndex + 1) % QUESTION_BANKS.length;
+  updateBankButton();
+  tryLoadRemoteBank();
+});
 $("btn-rounds-3").addEventListener("click", () => { HardballAudio.playSFX("click"); setRounds(3); });
 $("btn-rounds-5").addEventListener("click", () => { HardballAudio.playSFX("click"); setRounds(5); });
 $("btn-rounds-7").addEventListener("click", () => { HardballAudio.playSFX("click"); setRounds(7); });
@@ -665,7 +691,7 @@ const GAMEPAD_BUTTON_TO_CHOICE = [3, 2, 1, 0]; // gamepad button idx -> choice i
 const gamepadPrev = {};
 
 // Title screen navigation elements
-const TITLE_NAV_ELEMENTS = [ $("btn-start"), $("btn-rounds-3"), $("btn-rounds-5"), $("btn-rounds-7"), $("btn-help"), $("btn-reload-bank") ];
+const TITLE_NAV_ELEMENTS = [ $("btn-start"), $("btn-rounds-3"), $("btn-rounds-5"), $("btn-rounds-7"), $("btn-help"), $("btn-reload-bank"), $("btn-bank") ];
 let titleFocus = 0;
 function updateTitleFocus() {
   TITLE_NAV_ELEMENTS.forEach((el, i) => {
