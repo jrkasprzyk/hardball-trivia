@@ -671,13 +671,13 @@ const KEY_MAP = {
 document.addEventListener("keydown", (e) => {
   if (e.repeat) return;
   const m = KEY_MAP[e.key];
-  if (m && modalReadyCallback) {
-    if (state.players[m.player - 1].isHuman) {
+  if (m && modalReadyCallback && els.modal && els.modal.classList.contains('active')) {
+    if (state.players[m.player - 1] && state.players[m.player - 1].isHuman) {
       markModalReady(m.player - 1);
     }
   }
   if (m && state.phase === "question") {
-    if (state.players[m.player - 1].isHuman) {
+    if (state.players[m.player - 1] && state.players[m.player - 1].isHuman) {
       handlePlayerInput(m.player, m.idx);
     }
   }
