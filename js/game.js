@@ -57,25 +57,33 @@ const EMBEDDED_QUESTION_BANK = {
 // Pin the CDN to a version tag for real gameplay so content is reproducible.
 // Dev (unpinned, tracks main):
 //   https://cdn.jsdelivr.net/gh/jrkasprzyk/promptukit@main/promptukit/data/question_banks/jrb_industries_trivia.json
-const REMOTE_BANK_VERSION = "v0.1.450";
+const PROMPTUKIT_VERSION = "v0.1.550";
+const CVEN5393_VERSION = "v0.1.2";
+const VERSIONS = { PROMPTUKIT_VERSION, CVEN5393_VERSION };
 const QUESTION_BANKS = [
   {
     key: "jrb",
     label: "JRB Industries Trivia",
-    url: `https://cdn.jsdelivr.net/gh/jrkasprzyk/promptukit@${REMOTE_BANK_VERSION}/promptukit/data/question_banks/jrb_industries_trivia.json`
+    versionConst: "PROMPTUKIT_VERSION",
+    localFallbacks: ["jrb_industries_trivia.v.0.1.281.json", "questions.json"],
+    url: `https://cdn.jsdelivr.net/gh/jrkasprzyk/promptukit@${PROMPTUKIT_VERSION}/promptukit/data/question_banks/jrb_industries_trivia.json`
   },
   {
     key: "dev",
     label: "Dev Unaware Challenge",
-    url: `https://cdn.jsdelivr.net/gh/jrkasprzyk/promptukit@${REMOTE_BANK_VERSION}/promptukit/data/question_banks/dev-unaware-challenge.json`
+    versionConst: "PROMPTUKIT_VERSION",
+    localFallbacks: [],
+    url: `https://cdn.jsdelivr.net/gh/jrkasprzyk/promptukit@${PROMPTUKIT_VERSION}/promptukit/data/question_banks/dev-unaware-challenge.json`
+  },
+  {
+    key: "cven5393",
+    label: "CVEN 5393 - SP26 Exam 2 Review",
+    versionConst: "CVEN5393_VERSION",
+    localFallbacks: [],
+    url: `https://cdn.jsdelivr.net/gh/jrkasprzyk/CVEN5393@${CVEN5393_VERSION}/exam_prep/5393.sp26.exam2.review.json`
   }
 ];
 let selectedBankIndex = 0;
-const REMOTE_BANK_URL = QUESTION_BANKS[0].url;
-const LOCAL_FALLBACK_URLS = [
-  "jrb_industries_trivia.v.0.1.281.json",
-  "questions.json"
-];
 
 // Start with the embedded bank; we'll attempt to load a remote bank below.
 let QUESTION_BANK = EMBEDDED_QUESTION_BANK;
@@ -245,14 +253,19 @@ async function fetchBank(url) {
 // that yields a non-empty question pool.
 function updateBankButton() {
   const btn = $("btn-bank");
-  if (btn) btn.textContent = `\u{1F4DA} ${QUESTION_BANKS[selectedBankIndex].label}`;
+  if (btn) {
+    const bank = QUESTION_BANKS[selectedBankIndex];
+    btn.textContent = `\u{1F4DA} ${bank.label} (${bank.loadedVersion ?? '\u2026'})`;
+  }
 }
 
 function tryLoadRemoteBank() {
   const bank = QUESTION_BANKS[selectedBankIndex];
+  bank.loadedVersion = null;
+  updateBankButton();
   const sources = [
-    { url: bank.url, kind: 'cdn', label: `cdn ${REMOTE_BANK_VERSION}` },
-    ...LOCAL_FALLBACK_URLS.map(url => ({ url, kind: 'local', label: `local ${url}` }))
+    { url: bank.url, kind: 'cdn', label: `cdn ${VERSIONS[bank.versionConst]}` },
+    ...bank.localFallbacks.map(url => ({ url, kind: 'local', label: `local ${url}` }))
   ];
 
   remoteBankReady = (async () => {
@@ -269,6 +282,8 @@ function tryLoadRemoteBank() {
         }
         QUESTION_BANK = data;
         POOL = nextPool;
+        bank.loadedVersion = src.kind === 'cdn' ? VERSIONS[bank.versionConst] : 'offline copy';
+        updateBankButton();
         const title = QUESTION_BANK.title || src.label;
         if (els && els.statusRight) els.statusRight.textContent = `Bank: ${title} (${POOL.length} Qs)`;
         if (els && els.status) els.status.textContent = "Ready.";
@@ -283,12 +298,13 @@ function tryLoadRemoteBank() {
     // All remote/local sources failed — keep embedded bank that was loaded at init.
     QUESTION_BANK = EMBEDDED_QUESTION_BANK;
     POOL = flattenBank(QUESTION_BANK);
+    bank.loadedVersion = 'built-in';
+    updateBankButton();
     if (els && els.statusRight) els.statusRight.textContent = "Bank: embedded (offline)";
     if (els && els.status) els.status.textContent = "Ready.";
   })();
 }
 tryLoadRemoteBank();
-updateBankButton();
 
 // ============================================================
 // SETUP
