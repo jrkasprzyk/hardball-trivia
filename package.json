@@ -3,5 +3,8 @@
   "version": "0.1.2",
   "description": "Two-player trivia negotiation game with gamepad support",
   "author": "Joseph Kasprzyk",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "bump": "node dev/bump-version.js"
+  }
 }
