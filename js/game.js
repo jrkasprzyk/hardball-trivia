@@ -178,7 +178,9 @@ const state = {
   aiTimers: [],
   firstCorrectPlayer: null,
   briefcaseValue: 0,
-  warningTimeout: null
+  warningTimeout: null,
+  tiebreakerPayout: null,  // non-null = tiebreaker question just ran; value = briefcase amount at stake
+  tiebreakerPending: false  // set before tiebreaker question so isRoundEnding() fires after it
 };
 
 // ---- DOM refs ----
@@ -360,6 +362,8 @@ async function startGame() {
   for (const p of state.players) {
     p.cash = 0; p.leverage = 0; p.strikes = 0; p.lockedOut = false;
   }
+  state.tiebreakerPayout = null;
+  state.tiebreakerPending = false;
   updateHUD();
   showScene("game");
   HardballAudio.playMusic("gameplay");
@@ -1080,6 +1084,7 @@ function pickInterstitialQuip() {
 }
 
 function isRoundEnding() {
+  if (state.tiebreakerPending) { state.tiebreakerPending = false; return true; }
   const p1 = state.players[0].leverage;
   const p2 = state.players[1].leverage;
   if (p1 >= LEVERAGE_WIN || p2 >= LEVERAGE_WIN) return true;
@@ -1105,9 +1110,13 @@ function updateDealPositions(isFinal) {
   const leanPct = Math.max(-20, Math.min(20, diff * 0.15));
 
   // At round resolution, the winning hand shoves the briefcase into the loser's chest.
+  // Check both conditions independently — in SIMUL mode both players can hit WIN/PIN simultaneously.
+  const p1WinCond = p1.leverage >= LEVERAGE_WIN || p2.leverage <= LEVERAGE_PIN;
+  const p2WinCond = p2.leverage >= LEVERAGE_WIN || p1.leverage <= LEVERAGE_PIN;
   let winner = 0;
-  if (p1.leverage >= LEVERAGE_WIN || p2.leverage <= LEVERAGE_PIN) winner = 1;
-  else if (p2.leverage >= LEVERAGE_WIN || p1.leverage <= LEVERAGE_PIN) winner = 2;
+  if (p1WinCond && p2WinCond) winner = 0;
+  else if (p1WinCond) winner = 1;
+  else if (p2WinCond) winner = 2;
   else winner = diff > 0 ? 1 : (diff < 0 ? 2 : 0);
 
   if (isFinal && winner !== 0) {
@@ -1256,53 +1265,126 @@ function startNextQuestionSameRound() {
 function runDealPhase() {
   const p1 = state.players[0];
   const p2 = state.players[1];
-  const { winner } = updateDealPositions(true);
 
-  // Winner takes the full briefcase. Leverage determines who wins, not the size of the payout.
-  const payout = winner ? state.briefcaseValue : 0;
+  // --- Determine winner ---
+  // If tiebreakerPayout is set, we're resolving the tiebreaker question by correctness.
+  const isTiebreakerResolution = state.tiebreakerPayout !== null;
+  let winner, payout;
+
+  if (isTiebreakerResolution) {
+    payout = state.tiebreakerPayout;
+    state.tiebreakerPayout = null;
+    const p1c = p1.answeredCorrect;
+    const p2c = p2.answeredCorrect;
+    if (p1c && !p2c) winner = 1;
+    else if (p2c && !p1c) winner = 2;
+    else winner = 0;
+    updateDealPositions(winner !== 0);
+  } else {
+    const result = updateDealPositions(true);
+    winner = result.winner;
+    payout = winner ? state.briefcaseValue : 0;
+  }
 
   // ---- Banner + cash ----
   setTimeout(() => {
     let bannerText, color;
-    const levStr = `(Leverage: P1 ${p1.leverage} vs P2 ${p2.leverage})`;
-    if (winner === 1) {
-      bannerText = `PLAYER 1 WINS THE BRIEFCASE  +$${payout}\n${levStr}`;
-      color = "var(--p1-color)";
-      state.players[0].cash += payout;
-    } else if (winner === 2) {
-      bannerText = `PLAYER 2 WINS THE BRIEFCASE  +$${payout}\n${levStr}`;
-      color = "var(--p2-color)";
-      state.players[1].cash += payout;
+
+    if (isTiebreakerResolution) {
+      if (winner === 1) {
+        bannerText = `PLAYER 1 WINS THE BRIEFCASE (TIEBREAKER)  +$${payout}\n(P1 locked in correctly)`;
+        color = "var(--p1-color)";
+        state.players[0].cash += payout;
+      } else if (winner === 2) {
+        bannerText = `PLAYER 2 WINS THE BRIEFCASE (TIEBREAKER)  +$${payout}\n(P2 locked in correctly)`;
+        color = "var(--p2-color)";
+        state.players[1].cash += payout;
+      } else {
+        bannerText = `TIEBREAKER STALEMATE — NO DEAL\n(Both or neither answered correctly)`;
+        color = "#555";
+      }
     } else {
-      bannerText = `STALEMATE — NO DEAL\n${levStr}`;
-      color = "#555";
-    }
-    // Penalty for finishing the round with negative leverage
-    for (const p of state.players) {
-      if (p.leverage < 0) {
-        const loss = Math.min(p.cash, Math.min(30, Math.floor(Math.abs(p.leverage) / 5)));
-        p.cash -= loss;
+      const levStr = `(Leverage: P1 ${p1.leverage} vs P2 ${p2.leverage})`;
+      if (winner === 1) {
+        bannerText = `PLAYER 1 WINS THE BRIEFCASE  +$${payout}\n${levStr}`;
+        color = "var(--p1-color)";
+        state.players[0].cash += payout;
+      } else if (winner === 2) {
+        bannerText = `PLAYER 2 WINS THE BRIEFCASE  +$${payout}\n${levStr}`;
+        color = "var(--p2-color)";
+        state.players[1].cash += payout;
+      } else {
+        bannerText = `TIEBREAKER!\nEqual leverage — one secret lock-in decides the briefcase!`;
+        color = "#c8960c";
+      }
+      // Penalty for finishing a normal round with negative leverage
+      for (const p of state.players) {
+        if (p.leverage < 0) {
+          const loss = Math.min(p.cash, Math.min(30, Math.floor(Math.abs(p.leverage) / 5)));
+          p.cash -= loss;
+        }
       }
     }
 
     els.dealBannerText.textContent = bannerText;
-    els.dealBanner.style.background =
-      `linear-gradient(to bottom, ${color}, #000)`;
+    els.dealBanner.style.background = `linear-gradient(to bottom, ${color}, #000)`;
     els.dealBanner.style.color = "white";
     els.dealBanner.classList.add("shown");
 
-    // Fly money effect
     if (winner) flyMoney(winner, payout);
-
     updateHUD();
   }, 900);
 
   // ---- Move on ----
-  setTimeout(() => {
-    state.phase = "between";
-    els.dealBanner.classList.remove("shown");
-    setTimeout(() => nextRound(), 900);
-  }, 3200);
+  if (!isTiebreakerResolution && winner === 0) {
+    // Stalemate: queue a tiebreaker question instead of the next round.
+    state.tiebreakerPayout = state.briefcaseValue;
+    setTimeout(() => {
+      els.dealBanner.classList.remove("shown");
+      setTimeout(() => startTiebreakerQuestion(), 900);
+    }, 3200);
+  } else {
+    setTimeout(() => {
+      state.phase = "between";
+      els.dealBanner.classList.remove("shown");
+      setTimeout(() => nextRound(), 900);
+    }, 3200);
+  }
+}
+
+function startTiebreakerQuestion() {
+  // Sudden-death SIMUL question: winner is whoever answers correctly, not leverage.
+  state.roundType = "simul";
+  state.tiebreakerPending = true;
+
+  const q = randomQuestion();
+  if (!q) { state.tiebreakerPayout = null; return nextRound(); }
+  state.question = q;
+  state.roundQuestions++;
+  for (const p of state.players) {
+    p.pickedChoice = null;
+    p.answeredCorrect = false;
+    p.lockedOut = false;
+    p.leverage = 0;
+    p.strikesThisRound = 0;
+  }
+  state.firstCorrectPlayer = null;
+  $("locked-p1")?.classList.remove("shown");
+  $("locked-p2")?.classList.remove("shown");
+
+  els.sectionTitle.textContent = q.category;
+  els.roundType.textContent = "TIEBREAKER — LOCK-IN";
+  els.prompt.textContent = q.prompt;
+  renderChoices();
+  resetDealScene();
+  updateHUD();
+
+  els.timerFill.style.transition = "none";
+  els.timerFill.style.width = "100%";
+  els.timerFill.classList.remove("warning");
+
+  state.phase = "question";
+  setTimeout(() => beginQuestion(), 1200);
 }
 
 function flyMoney(winner, amount) {
