@@ -258,6 +258,10 @@ function updateBankButton() {
     const bank = QUESTION_BANKS[selectedBankIndex];
     btn.textContent = `\u{1F4DA} ${bank.label} (${bank.loadedVersion ?? '\u2026'})`;
   }
+  const params = new URLSearchParams(window.location.search);
+  params.set("bank", QUESTION_BANKS[selectedBankIndex].key);
+  history.replaceState(null, "", `?${params}`);
+
 }
 
 function tryLoadRemoteBank() {
