@@ -83,7 +83,8 @@ const QUESTION_BANKS = [
     url: `https://cdn.jsdelivr.net/gh/jrkasprzyk/CVEN5393@${CVEN5393_VERSION}/exam_prep/5393.sp26.exam2.review.json`
   }
 ];
-let selectedBankIndex = 0;
+const _bankParam = new URLSearchParams(window.location.search).get("bank");
+let selectedBankIndex = Math.max(0, QUESTION_BANKS.findIndex(b => b.key === _bankParam));
 
 // Start with the embedded bank; we'll attempt to load a remote bank below.
 let QUESTION_BANK = EMBEDDED_QUESTION_BANK;
