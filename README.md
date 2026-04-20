@@ -77,7 +77,7 @@ The game accepts banks in the promptukit-friendly schema. By default a small
 embedded bank is used (so `index.html` works over `file://`). To swap banks:
 
 - Paste a JSON bank into the `QUESTION_BANK` object in `index.html`.
-- Or serve a JSON file and modify the remote loading URL in `index.html`.
+- Or serve a JSON file and modify the remote loading URL in `game.js`.
 
 Expected fields: `prompt` (or `q`/`question`), `choices` (array), `answer` (zero-index), `difficulty` (optional), `category` (optional).
 

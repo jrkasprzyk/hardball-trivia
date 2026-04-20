@@ -140,3 +140,4 @@ audio/**/_old/
 
 # Claude Code worktree scratch space
 .claude/worktrees/
+.claude/settings.local.json

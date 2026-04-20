@@ -57,7 +57,7 @@ const EMBEDDED_QUESTION_BANK = {
 // Pin the CDN to a version tag for real gameplay so content is reproducible.
 // Dev (unpinned, tracks main):
 //   https://cdn.jsdelivr.net/gh/jrkasprzyk/promptukit@main/promptukit/data/question_banks/jrb_industries_trivia.json
-const REMOTE_BANK_VERSION = "v0.1.400";
+const REMOTE_BANK_VERSION = "v0.1.450";
 const QUESTION_BANKS = [
   {
     key: "jrb",
