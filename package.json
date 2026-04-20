@@ -1,0 +1,7 @@
+{
+  "name": "hardball-trivia",
+  "version": "0.1.2",
+  "description": "Two-player trivia negotiation game with gamepad support",
+  "author": "Joseph Kasprzyk",
+  "license": "MIT"
+}
