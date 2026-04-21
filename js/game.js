@@ -554,8 +554,19 @@ function renderChoices() {
           <div class="press-dot p2" data-player="2"></div>
         </div>
       `;
-    // Allow mouse/touch selection still
-    div.addEventListener('click', () => handlePlayerInput(1, i));
+    // Make choices keyboard-focusable and handle activation via pointer or keyboard.
+    div.setAttribute('tabindex', '0');
+    div.addEventListener('click', (ev) => {
+      const player = getPlayerFromActivationEvent(ev);
+      handlePlayerInput(player, i);
+    });
+    div.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        const player = getPlayerFromActivationEvent(ev);
+        handlePlayerInput(player, i);
+      }
+    });
     els.choices.appendChild(div);
   });
 }

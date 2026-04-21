@@ -87,6 +87,12 @@
       this.input = window.Input;
       this._hookInput();
       this.panel.querySelector('#debug-status').textContent = 'InputManager available.';
+      // Auto-run tests once when debugging is enabled so fixes can be verified
+      if (this.enabled && !this._autoRunDone) {
+        this._autoRunDone = true;
+        // Slight delay to let UI settle
+        setTimeout(() => { try { this.runTests(); } catch (err) { console.error('Auto-run tests failed', err); } }, 200);
+      }
     } else {
       this.panel.querySelector('#debug-status').textContent = 'Waiting for InputManager…';
       setTimeout(() => this._waitForInput(), 300);
@@ -198,8 +204,8 @@
       state.question = { prompt: 'ClickMappingTest', choices: ['A','B','C','D'], answer: 0, difficulty:'easy', category:'Test' };
       renderChoices();
       state.phase = 'question';
-      // clear picks
-      state.players.forEach(p => p.pickedChoice = null);
+      // clear picks and per-player transient state
+      state.players.forEach(p => { p.pickedChoice = null; p.lockedOut = false; p.answeredCorrect = false; p.strikesThisRound = 0; p.strikes = 0; });
 
       const choice = els.choices.querySelector('.choice[data-index="0"]');
       if (!choice) {
@@ -232,7 +238,7 @@
       state.question = { prompt: 'KeyboardTest', choices: ['A','B','C','D'], answer: 0, difficulty:'easy', category:'Test' };
       renderChoices();
       state.phase = 'question';
-      state.players.forEach(p => p.pickedChoice = null);
+      state.players.forEach(p => { p.pickedChoice = null; p.lockedOut = false; p.answeredCorrect = false; p.strikesThisRound = 0; p.strikes = 0; });
 
       const choice = els.choices.querySelector('.choice[data-index="1"]');
       if (!choice) { state.players.forEach((p, i) => p.isHuman = prevHuman[i]); return resolve({ name, pass: false, reason: 'choice element not found' }); }
@@ -259,7 +265,7 @@
       state.question = { prompt: 'GamepadTest', choices: ['A','B','C','D'], answer: 0, difficulty:'easy', category:'Test' };
       renderChoices();
       state.phase = 'question';
-      state.players.forEach(p => p.pickedChoice = null);
+      state.players.forEach(p => { p.pickedChoice = null; p.lockedOut = false; p.answeredCorrect = false; p.strikesThisRound = 0; p.strikes = 0; });
 
       // Simulate gamepad button 3 (Y) for player 1 maps to choice index 0 per mapping
       if (window.Input && typeof window.Input._emit === 'function') {
