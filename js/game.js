@@ -880,6 +880,11 @@ if (window.InputManager) {
   // Raw button handling — mirrors previous pollGamepads behavior but via events
   Input.on('buttondown', ({ gamepadIndex, buttonIndex, playerId }) => {
     const player = playerId || (gamepadIndex + 1);
+    // Extra debug logging to help trace why some gamepad inputs fail to map
+    try {
+      const dbg = localStorage.getItem('hardball_debug') === '1';
+      if (dbg) console.debug('[Input debug] buttondown', { gamepadIndex, buttonIndex, playerId, player, phase: state.phase, isHuman: state.players[player - 1] && state.players[player - 1].isHuman, lockedOut: state.players[player - 1] && state.players[player - 1].lockedOut });
+    } catch (err) { /* ignore */ }
     // Modal gets priority when active
     if (els.modal && els.modal.classList.contains('active')) {
       if (buttonIndex === 0) {
@@ -908,9 +913,22 @@ if (window.InputManager) {
 
     // In-question choices
     if (state.phase === "question") {
-      if (state.players[player - 1] && state.players[player - 1].isHuman) {
+      const playerObj = state.players[player - 1];
+      if (playerObj && playerObj.isHuman) {
         const choiceIdx = GAMEPAD_BUTTON_TO_CHOICE[buttonIndex];
-        if (typeof choiceIdx !== 'undefined') handlePlayerInput(player, choiceIdx);
+        try {
+          const dbg = localStorage.getItem('hardball_debug') === '1';
+          if (dbg) console.debug('[Input debug] computed choiceIdx', { buttonIndex, choiceIdx, player });
+        } catch (err) {}
+        if (typeof choiceIdx !== 'undefined') {
+          // Only call if not locked out and valid choice
+          if (!playerObj.lockedOut) handlePlayerInput(player, choiceIdx);
+          else {
+            try { if (localStorage.getItem('hardball_debug') === '1') console.debug('[Input debug] player locked out, ignoring input', player); } catch (e) {}
+          }
+        }
+      } else {
+        try { if (localStorage.getItem('hardball_debug') === '1') console.debug('[Input debug] ignoring buttondown: not human or missing player', player); } catch (e) {}
       }
     }
   });
