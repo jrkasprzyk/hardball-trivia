@@ -883,7 +883,11 @@ if (window.InputManager) {
     // Extra debug logging to help trace why some gamepad inputs fail to map
     try {
       const dbg = localStorage.getItem('hardball_debug') === '1';
-      if (dbg) console.debug('[Input debug] buttondown', { gamepadIndex, buttonIndex, playerId, player, phase: state.phase, isHuman: state.players[player - 1] && state.players[player - 1].isHuman, lockedOut: state.players[player - 1] && state.players[player - 1].lockedOut });
+      if (dbg) {
+        const msg = { gamepadIndex, buttonIndex, playerId, player, phase: state.phase, isHuman: state.players[player - 1] && state.players[player - 1].isHuman, lockedOut: state.players[player - 1] && state.players[player - 1].lockedOut };
+        console.debug('[Input debug] buttondown', msg);
+        try { if (window.debugPanel && typeof window.debugPanel._pushEvent === 'function') window.debugPanel._pushEvent('gamedebug', msg); } catch (e) {}
+      }
     } catch (err) { /* ignore */ }
     // Modal gets priority when active
     if (els.modal && els.modal.classList.contains('active')) {
@@ -918,7 +922,11 @@ if (window.InputManager) {
         const choiceIdx = GAMEPAD_BUTTON_TO_CHOICE[buttonIndex];
         try {
           const dbg = localStorage.getItem('hardball_debug') === '1';
-          if (dbg) console.debug('[Input debug] computed choiceIdx', { buttonIndex, choiceIdx, player });
+          const msg = { buttonIndex, choiceIdx, player };
+          if (dbg) {
+            console.debug('[Input debug] computed choiceIdx', msg);
+            try { if (window.debugPanel && typeof window.debugPanel._pushEvent === 'function') window.debugPanel._pushEvent('gamedebug', msg); } catch (e) {}
+          }
         } catch (err) {}
         if (typeof choiceIdx !== 'undefined') {
           // Only call if not locked out and valid choice
