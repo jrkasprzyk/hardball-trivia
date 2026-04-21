@@ -862,7 +862,80 @@ function pollGamepads() {
 }
 // Initialize title focus if title is visible
 if (document.querySelector("#scene-title").classList.contains("active")) updateTitleFocus();
-requestAnimationFrame(pollGamepads);
+// Start unified InputManager (handles gamepad polling + canonical actions)
+if (window.InputManager) {
+  window.Input = new InputManager({ maxPlayers: 2, deadzone: 0.28, axisInitialDelay: 350, axisRepeatInterval: 120 });
+
+  // Raw button handling — mirrors previous pollGamepads behavior but via events
+  Input.on('buttondown', ({ gamepadIndex, buttonIndex, playerId }) => {
+    const player = playerId || (gamepadIndex + 1);
+    // Modal gets priority when active
+    if (els.modal && els.modal.classList.contains('active')) {
+      if (buttonIndex === 0) {
+        if (modalReadyCallback) {
+          if (state.players[player - 1] && state.players[player - 1].isHuman) {
+            markModalReady(player - 1);
+          }
+        } else {
+          const btns = els.modalActions.querySelectorAll('button');
+          const btn = btns[modalFocus] || btns[0];
+          if (btn) btn.click();
+        }
+      }
+      return;
+    }
+
+    // Title screen navigation / join
+    if (document.querySelector("#scene-title").classList.contains("active")) {
+      if (buttonIndex === 3 && !state.players[player - 1].isHuman) {
+        joinPlayer(player);
+      } else {
+        handleTitleGamepadInput(player, buttonIndex);
+      }
+      return;
+    }
+
+    // In-question choices
+    if (state.phase === "question") {
+      if (state.players[player - 1] && state.players[player - 1].isHuman) {
+        const choiceIdx = GAMEPAD_BUTTON_TO_CHOICE[buttonIndex];
+        if (typeof choiceIdx !== 'undefined') handlePlayerInput(player, choiceIdx);
+      }
+    }
+  });
+
+  // System-level buttons (only act for player 1 to avoid double-fire)
+  Input.on('buttondown', ({ buttonIndex, playerId }) => {
+    if (playerId === 1) {
+      if (buttonIndex === 9) HardballAudio.toggleMute();
+      if (buttonIndex === 8 && state.phase !== "idle") returnToTitle();
+    }
+  });
+
+  // D-pad / axis navigation for modals and title
+  Input.on('navigate', ({ dir, playerId }) => {
+    if (els.modal && els.modal.classList.contains('active')) {
+      const btns = els.modalActions ? els.modalActions.children : null;
+      if (btns && btns.length) {
+        if (dir === 'up' || dir === 'left') {
+          modalFocus = (modalFocus - 1 + btns.length) % btns.length;
+          updateModalFocus();
+        } else if (dir === 'down' || dir === 'right') {
+          modalFocus = (modalFocus + 1) % btns.length;
+          updateModalFocus();
+        }
+      }
+    } else if (document.querySelector("#scene-title").classList.contains("active")) {
+      const map = { up: 12, down: 13, left: 14, right: 15 };
+      handleTitleGamepadInput(playerId, map[dir]);
+    }
+  });
+
+  Input.start();
+} else {
+  // Fallback to legacy poll loop if InputManager isn't available
+  requestAnimationFrame(pollGamepads);
+}
 
 function handlePlayerInput(playerNum, choiceIdx) {
   // Only accept input while a question is actively live. Blocks late buzzes
@@ -1492,19 +1565,8 @@ function markModalReady(playerIdx) {
   modalReadyFlags[playerIdx] = true;
   const dot = document.getElementById(`modal-ready-p${playerIdx + 1}`);
   if (dot) dot.classList.add("ready");
-    // Make choices keyboard-focusable and handle activation via pointer or keyboard.
-    div.setAttribute('tabindex', '0');
-    div.addEventListener('click', (ev) => {
-      const player = getPlayerFromActivationEvent(ev);
-      handlePlayerInput(player, i);
-    });
-    div.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter' || ev.key === ' ') {
-        ev.preventDefault();
-        const player = getPlayerFromActivationEvent(ev);
-        handlePlayerInput(player, i);
-      }
-    });
+  const allReady = state.players.every((p, i) => !p.isHuman || modalReadyFlags[i]);
+  if (!allReady) return;
   if (!modalReadyCallback) return;
   const cb = modalReadyCallback;
   modalReadyCallback = null;
@@ -1526,6 +1588,30 @@ function showModal({ title, subtitle, detail, actions, requireBothPlayers }) {
     readyDiv.className = "modal-both-ready";
     readyDiv.innerHTML = `<div class="quote-ready-dot p1" id="modal-ready-p1"></div><span>PRESS A TO BEGIN</span><div class="quote-ready-dot p2" id="modal-ready-p2"></div>`;
     els.modalActions.appendChild(readyDiv);
+    // Make the ready dots clickable and keyboard-activatable so mouse users
+    // can also mark their player as ready. Clicking left/right of the
+    // container will infer P1/P2 based on click position.
+    const dot1 = document.getElementById('modal-ready-p1');
+    const dot2 = document.getElementById('modal-ready-p2');
+    const attachDotHandlers = (dot, idx) => {
+      if (!dot) return;
+      dot.setAttribute('role', 'button');
+      dot.setAttribute('tabindex', '0');
+      dot.addEventListener('click', (ev) => { ev.stopPropagation(); markModalReady(idx); });
+      dot.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); markModalReady(idx); } });
+    };
+    attachDotHandlers(dot1, 0);
+    attachDotHandlers(dot2, 1);
+    // Clicks on the ready container also map to a player based on horizontal position
+    readyDiv.addEventListener('click', (ev) => {
+      try {
+        const rect = readyDiv.getBoundingClientRect();
+        const player = (ev.clientX < (rect.left + rect.width / 2)) ? 1 : 2;
+        markModalReady(player - 1);
+      } catch (err) {
+        markModalReady(0);
+      }
+    });
     for (let i = 0; i < state.players.length; i++) {
       if (!state.players[i].isHuman) markModalReady(i);
     }
