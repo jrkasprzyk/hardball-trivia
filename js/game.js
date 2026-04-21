@@ -57,8 +57,8 @@ const EMBEDDED_QUESTION_BANK = {
 // Pin the CDN to a version tag for real gameplay so content is reproducible.
 // Dev (unpinned, tracks main):
 //   https://cdn.jsdelivr.net/gh/jrkasprzyk/promptukit@main/promptukit/data/question_banks/jrb_industries_trivia.json
-const PROMPTUKIT_VERSION = "v0.1.600";
-const CVEN5393_VERSION = "v0.1.2";
+const PROMPTUKIT_VERSION = "v0.2.100";
+const CVEN5393_VERSION = "v0.1.4";
 const VERSIONS = { PROMPTUKIT_VERSION, CVEN5393_VERSION };
 const QUESTION_BANKS = [
   {
@@ -327,7 +327,12 @@ $("btn-rounds-5").addEventListener("click", () => { HardballAudio.playSFX("click
 $("btn-rounds-7").addEventListener("click", () => { HardballAudio.playSFX("click"); setRounds(7); });
 $("btn-help").addEventListener("click", showHelpModal);
 const menubarHelp = $("menubar-help");
-if (menubarHelp) menubarHelp.addEventListener("click", showHelpModal);
+if (menubarHelp) {
+  menubarHelp.addEventListener("click", showHelpModal);
+  menubarHelp.addEventListener("keydown", (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showHelpModal(); }
+  });
+}
 
 // --- Join UI helpers: controller "Y" will mark a gamepad as joined (human)
 function updateJoinUI() {
@@ -561,6 +566,27 @@ function escapeHTML(s) {
   return d.innerHTML;
 }
 
+// Determine which player a local activation (mouse click or keyboard Enter)
+// should be attributed to.
+function getPlayerFromActivationEvent(e) {
+  // If exactly one human player is present, attribute to them.
+  const humans = state.players.map((p, i) => p.isHuman ? i + 1 : null).filter(Boolean);
+  if (humans.length === 1) return humans[0];
+
+  // If event carries a clientX (pointer), use screen side: left = P1, right = P2.
+  if (e && typeof e.clientX === 'number') {
+    try {
+      const mid = window.innerWidth / 2;
+      return (e.clientX < mid) ? 1 : 2;
+    } catch (err) {
+      // fall through
+    }
+  }
+
+  // Default fallback to player 1.
+  return 1;
+}
+
 // ============================================================
 // TIMER
 // ============================================================
@@ -670,7 +696,12 @@ const KEY_MAP = {
 
 document.addEventListener("keydown", (e) => {
   if (e.repeat) return;
-  const m = KEY_MAP[e.key];
+  let m = KEY_MAP[e.key];
+  // Fallback to the physical key code for cases where Shift/modifiers change e.key
+  if (!m && e.code) {
+    const codeKey = String(e.code).replace(/^Digit|^Numpad/, '');
+    m = KEY_MAP[codeKey];
+  }
   if (m && modalReadyCallback && els.modal && els.modal.classList.contains('active')) {
     if (state.players[m.player - 1] && state.players[m.player - 1].isHuman) {
       markModalReady(m.player - 1);
@@ -697,7 +728,12 @@ function returnToTitle() {
 }
 
 const btnCloseWindow = $("btn-close-window");
-if (btnCloseWindow) btnCloseWindow.addEventListener("click", returnToTitle);
+if (btnCloseWindow) {
+  btnCloseWindow.addEventListener("click", returnToTitle);
+  btnCloseWindow.addEventListener("keydown", (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); returnToTitle(); }
+  });
+}
 
 const btnMute = $("audio-mute-toggle");
 if (btnMute) {
@@ -1456,8 +1492,19 @@ function markModalReady(playerIdx) {
   modalReadyFlags[playerIdx] = true;
   const dot = document.getElementById(`modal-ready-p${playerIdx + 1}`);
   if (dot) dot.classList.add("ready");
-  const allReady = state.players.every((p, i) => !p.isHuman || modalReadyFlags[i]);
-  if (!allReady) return;
+    // Make choices keyboard-focusable and handle activation via pointer or keyboard.
+    div.setAttribute('tabindex', '0');
+    div.addEventListener('click', (ev) => {
+      const player = getPlayerFromActivationEvent(ev);
+      handlePlayerInput(player, i);
+    });
+    div.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        const player = getPlayerFromActivationEvent(ev);
+        handlePlayerInput(player, i);
+      }
+    });
   if (!modalReadyCallback) return;
   const cb = modalReadyCallback;
   modalReadyCallback = null;
