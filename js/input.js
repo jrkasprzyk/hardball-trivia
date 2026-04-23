@@ -20,9 +20,12 @@
     // axis hold state for repeat
     this.prevAxesDir = Object.create(null);
 
-    // Bind native events to track connection lifecycle when available
-    window.addEventListener('gamepadconnected', (e) => this._onConnected(e));
-    window.addEventListener('gamepaddisconnected', (e) => this._onDisconnected(e));
+    // Bind loop and listeners once so they can be removed on destroy()
+    this._boundLoop = this._loop.bind(this);
+    this._boundConnected = (e) => this._onConnected(e);
+    this._boundDisconnected = (e) => this._onDisconnected(e);
+    window.addEventListener('gamepadconnected', this._boundConnected);
+    window.addEventListener('gamepaddisconnected', this._boundDisconnected);
   }
 
   InputManager.prototype.on = function(name, fn) {
@@ -41,9 +44,9 @@
   };
 
   InputManager.prototype._assignGamepadToPlayer = function(gamepadIndex) {
-    if (this.gamepadToPlayer[gamepadIndex]) return this.gamepadToPlayer[gamepadIndex];
+    if (this.gamepadToPlayer[gamepadIndex] !== undefined) return this.gamepadToPlayer[gamepadIndex];
     for (let i = 1; i <= this.maxPlayers; i++) {
-      if (!this.playerToGamepad[i]) {
+      if (this.playerToGamepad[i] === undefined) {
         this.gamepadToPlayer[gamepadIndex] = i;
         this.playerToGamepad[i] = gamepadIndex;
         return i;
@@ -75,10 +78,16 @@
   InputManager.prototype.start = function() {
     if (this.running) return;
     this.running = true;
-    this._loop();
+    this._boundLoop();
   };
   InputManager.prototype.stop = function() {
     this.running = false;
+  };
+  InputManager.prototype.destroy = function() {
+    this.stop();
+    window.removeEventListener('gamepadconnected', this._boundConnected);
+    window.removeEventListener('gamepaddisconnected', this._boundDisconnected);
+    this.handlers = Object.create(null);
   };
 
   InputManager.prototype._loop = function() {
@@ -90,8 +99,8 @@
       const pad = pads[i];
       if (!pad) continue;
       // ensure assignment
-      if (!this.gamepadToPlayer[pad.index]) this._assignGamepadToPlayer(pad.index);
-      const playerId = this.gamepadToPlayer[pad.index] || null;
+      if (this.gamepadToPlayer[pad.index] === undefined) this._assignGamepadToPlayer(pad.index);
+      const playerId = this.gamepadToPlayer[pad.index] !== undefined ? this.gamepadToPlayer[pad.index] : null;
 
       // buttons
       const prev = this.prevButtons[pad.index] || [];
@@ -147,7 +156,7 @@
       this.prevAxesDir[pad.index] = pstate;
     }
 
-    requestAnimationFrame(this._loop.bind(this));
+    requestAnimationFrame(this._boundLoop);
   };
 
   // Expose

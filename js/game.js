@@ -857,12 +857,12 @@ function pollGamepads() {
       prev[b] = !!pressed;
     }
 
-    // System buttons: 8=View (return to title), 9=Menu (mute) — only player 1 to avoid double-fire
+    // System buttons: 8=View (return to title), 4=LB (mute) — only player 1 to avoid double-fire
     if (p === 0) {
-      for (const b of [8, 9]) {
+      for (const b of [4, 8]) {
         const pressed = pad.buttons[b] && pad.buttons[b].pressed;
         if (pressed && !prev[b]) {
-          if (b === 9) HardballAudio.toggleMute();
+          if (b === 4) HardballAudio.toggleMute();
           if (b === 8 && state.phase !== "idle") returnToTitle();
         }
         prev[b] = !!pressed;
@@ -880,6 +880,7 @@ if (window.InputManager) {
   // Raw button handling — mirrors previous pollGamepads behavior but via events
   Input.on('buttondown', ({ gamepadIndex, buttonIndex, playerId }) => {
     const player = playerId || (gamepadIndex + 1);
+    if (player < 1 || player > 2) return;
     // Extra debug logging to help trace why some gamepad inputs fail to map
     try {
       const dbg = localStorage.getItem('hardball_debug') === '1';
@@ -944,7 +945,7 @@ if (window.InputManager) {
   // System-level buttons (only act for player 1 to avoid double-fire)
   Input.on('buttondown', ({ buttonIndex, playerId }) => {
     if (playerId === 1) {
-      if (buttonIndex === 9) HardballAudio.toggleMute();
+      if (buttonIndex === 4) HardballAudio.toggleMute();
       if (buttonIndex === 8 && state.phase !== "idle") returnToTitle();
     }
   });
